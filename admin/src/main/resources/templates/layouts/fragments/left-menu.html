@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+	<th:block th:fragment="left-menu">
+		<aside class="sidebar">
+			<div class="sidebar-header">
+				<div class="brand-wrapper">
+					<div class="brand-icon">
+						<i class="fas fa-cube"></i>
+					</div>
+					<span class="brand-text"><span class="brand-highlight">P</span>RIME</span>
+				</div>
+			</div>
+
+			<nav class="sidebar-nav" id="leftMenu">
+
+				<th:block th:each="group : ${menuGroupCodeList}">
+
+					<th:block
+						th:with="groupMenus=${menus.?[menuGroupCode == __${group.code}__]}">
+
+						<th:block th:if="${not #lists.isEmpty(groupMenus)}">
+
+							<div
+								class="sidebar-group-header px-3 mt-4 mb-2 text-uppercase text-muted"
+								style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;"
+								th:text="${group.desc}">Group Name</div>
+
+							<th:block th:each="menu : ${groupMenus}">
+
+								<th:block th:if="${#lists.isEmpty(menu.children)}">
+									<a class="nav-link"
+										th:classappend="${menu.code == 'SETTINGS' ? 'system-setting-link' : ''}"
+										th:href="${menu.url != null and menu.url != '#'} ? @{${menu.url}} : '#'">
+										<i th:if="${menu.icon}" class="nav-icon"
+										th:classappend="${menu.icon}"></i> <span class="nav-text"
+										th:text="${menu.name}">Dashboard</span>
+									</a>
+								</th:block>
+
+								<th:block th:if="${not #lists.isEmpty(menu.children)}">
+									<div class="menu-item-group">
+										<a class="nav-link dropdown-toggle" data-bs-toggle="collapse"
+											th:href="'#submenu-' + ${menu.id}" role="button"
+											aria-expanded="false"
+											th:aria-controls="'submenu-' + ${menu.id}"> <i
+											th:if="${menu.icon}" class="nav-icon"
+											th:classappend="${menu.icon}"></i> <span class="nav-text"
+											th:text="${menu.name}">Shop</span>
+										</a>
+
+										<div class="collapse sub-menu" th:id="'submenu-' + ${menu.id}">
+
+											<th:block th:each="child : ${menu.children}">
+
+												<th:block th:if="${#lists.isEmpty(child.children)}">
+													<a class="nav-link"
+														th:href="${child.url != null and child.url != '#'} ? @{${child.url}} : '#'"
+														th:text="${child.name}">Shops Manage</a>
+												</th:block>
+
+												<th:block th:if="${not #lists.isEmpty(child.children)}">
+													<div class="menu-item-group nested-group">
+														<a class="nav-link dropdown-toggle inner-toggle"
+															data-bs-toggle="collapse"
+															th:href="'#submenu-' + ${child.id}" role="button"
+															aria-expanded="false"
+															th:aria-controls="'submenu-' + ${child.id}"
+															th:text="${child.name}"> City </a>
+
+														<div class="collapse sub-menu level-3"
+															th:id="'submenu-' + ${child.id}">
+
+															<th:block th:each="grandChild : ${child.children}">
+																<a class="nav-link"
+																	th:href="${grandChild.url != null and grandChild.url != '#'} ? @{${grandChild.url}} : '#'"
+																	th:text="${grandChild.name}">Setup</a>
+															</th:block>
+
+														</div>
+													</div>
+												</th:block>
+
+											</th:block>
+										</div>
+									</div>
+								</th:block>
+
+							</th:block>
+						</th:block>
+					</th:block>
+				</th:block>
+
+			</nav>
+		</aside>
+	</th:block>
+</body>
+</html>

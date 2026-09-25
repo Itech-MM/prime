@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base-layout}">
+<head>
+    <title th:text="${userDTO.id != null} ? 'Update User' : 'User Setup'">User Setup</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="h3 mb-0 text-gray-800" th:text="${userDTO.id != null} ? 'Update User' : 'User Setup'">User Setup</h1>
+            <p class="text-muted mb-0" th:text="${userDTO.id != null} ? 'Update existing user information' : 'Create new system users'">Create new system users</p>
+        </div>
+
+        <!-- Error Message Alert -->
+        <div th:if="${param.error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${param.error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${errorMsg != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${errorMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Success Message Alert -->
+        <div th:if="${param.success != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${param.success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- User Setup Form -->
+        <div class="row justify-content-start">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-plus me-2 text-primary" th:classappend="${userDTO.id != null} ? 'fa-user-edit' : 'fa-user-plus'"></i>
+                            <span th:text="${userDTO.id != null} ? 'Update User' : 'Create New User'">Create New User</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/user-setup}" th:object="${userDTO}" method="post" id="userForm">
+                            <input type="hidden" th:field="*{id}">
+                            
+                            <!-- Name Field -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="name" class="form-label fw-bold small text-dark">
+                                        Full Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           th:field="*{name}" 
+                                           class="form-control" 
+                                           id="name"
+                                           placeholder="Enter full name"
+                                           required>
+                                    <div class="form-text text-danger small" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="phoneNumber" class="form-label fw-bold small text-dark">
+                                        Phone Number <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           th:field="*{phoneNumber}" 
+                                           class="form-control" 
+                                           id="phoneNumber"
+                                           placeholder="Enter phone number"
+                                           required>
+                                    <div class="form-text text-danger small" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Email Field -->
+                            <div class="row mb-3">
+                                <!-- <div class="col-md-6">
+                                    <label for="email" class="form-label fw-bold small text-dark">
+                                        Email Address
+                                    </label>
+                                    <input type="email" 
+                                           th:field="*{email}" 
+                                           class="form-control" 
+                                           id="email"
+                                           placeholder="Enter email address">
+                                    <div class="form-text text-danger small" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                                </div> -->
+                                
+                                <!-- Password Field - Only show for create mode -->
+                                <div class="col-md-6" th:unless="${userDTO.id != null}">
+                                    <label for="password" class="form-label fw-bold small text-dark">
+                                        Password <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" 
+                                               th:field="*{password}" 
+                                               class="form-control" 
+                                               id="password"
+                                               placeholder="Enter password"
+                                               required>
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text text-danger small" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                                </div>
+
+                                <!-- Empty column for update mode to maintain layout -->
+                                <div class="col-md-6" th:if="${userDTO.id != null}">
+                                    <!-- This column remains empty in update mode to maintain layout -->
+                                </div>
+                            </div>
+
+                            <!-- Role and Status Fields -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="roleId" class="form-label fw-bold small text-dark">
+                                        Role <span class="text-danger">*</span>
+                                    </label>
+                                    <select th:field="*{roleId}" 
+                                            class="form-select" 
+                                            id="roleId"
+                                            required>
+                                        <option value="">Select Role</option>
+                                        <option th:each="role : ${roleList}" 
+                                                th:value="${role.id}" 
+                                                th:text="${role.name}"
+                                                th:selected="${role.id == userDTO.roleId}">
+                                        </option>
+                                    </select>
+                                    <div class="form-text text-danger small" th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}"></div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="status" class="form-label fw-bold small text-dark">
+                                        Status <span class="text-danger">*</span>
+                                    </label>
+                                    <select th:field="*{status}" 
+                                            class="form-select" 
+                                            id="status"
+                                            required>
+                                        <option value="">Select Status</option>
+                                        <option th:each="status : ${statusList}" 
+                                                th:value="${status.code}" 
+                                                th:text="${status.desc}"
+                                                th:selected="${status.code == userDTO.status}">
+                                        </option>
+                                    </select>
+                                    <div class="form-text text-danger small" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a th:href="@{/users}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-1"></i> Back to List
+                                        </a>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                                            <i class="fas fa-redo me-1"></i> Clear
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-1"></i> 
+                                            <span th:text="${userDTO.id != null} ? 'Update User' : 'Create User'">Create User</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div layout:fragment="scripts">
+        <script>
+            $(document).ready(function() {
+                // Password visibility toggle - only if password field exists
+                $('#togglePassword').click(function() {
+                    const passwordField = $('#password');
+                    const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+                    passwordField.attr('type', type);
+                    $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+                });
+
+                // Phone number formatting (basic)
+                $('#phoneNumber').on('input', function() {
+                    let value = $(this).val().replace(/\D/g, '');
+                    $(this).val(value);
+                });
+
+                // Form validation - conditionally include password for create mode
+                $('#userForm').on('submit', function(e) {
+                    let isValid = true;
+                    const isUpdateMode = [[${userDTO.id != null}]];
+                    
+                    // Base required fields
+                    const requiredFields = ['#name', '#phoneNumber', '#roleId', '#status'];
+                    
+                    // Add password field only for create mode
+                    if (!isUpdateMode) {
+                        requiredFields.push('#password');
+                    }
+                    
+                    requiredFields.forEach(field => {
+                        const element = $(field);
+                        if (!element.val().trim()) {
+                            element.addClass('is-invalid');
+                            isValid = false;
+                        } else {
+                            element.removeClass('is-invalid');
+                        }
+                    });
+
+                    if (!isValid) {
+                        e.preventDefault();
+                        showToast('Please fill all required fields', 'error');
+                    }
+                });
+
+                // Real-time validation
+                $('input, select').on('input change', function() {
+                    if ($(this).val().trim()) {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+
+                // Update form action for update mode if needed
+                const isUpdateMode = [[${userDTO.id != null}]];
+                if (isUpdateMode) {
+                    // You might want to change the form action for update
+                    // $('#userForm').attr('action', '/users/' + [[${userDTO.id}]]);
+                }
+            });
+
+            function clearForm() {
+                $('#userForm')[0].reset();
+                $('input, select').removeClass('is-invalid');
+                showToast('Form cleared', 'info');
+            }
+
+           
+        </script>
+    </div>
+</body>
+</html>
