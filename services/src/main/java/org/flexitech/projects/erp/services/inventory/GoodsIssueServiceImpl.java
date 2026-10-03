@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.flexitech.projects.erp.commons.CommonConstants;
 import org.flexitech.projects.erp.commons.CommonValidators;
 import org.flexitech.projects.erp.commons.InventoryRefDocTypes;
+import org.flexitech.projects.erp.commons.enums.InventoryAuditAction;
 import org.flexitech.projects.erp.commons.enums.InventoryDocStatus;
 import org.flexitech.projects.erp.commons.enums.StockSerialStatus;
 import org.flexitech.projects.erp.commons.enums.TrackingType;
@@ -66,13 +67,15 @@ public class GoodsIssueServiceImpl implements GoodsIssueService {
 	private final DocumentSequenceService documentSequenceService;
 	private final StockMovementService stockMovementService;
 	private final AuthenticationService authenticationService;
+	private final InventoryAuditLogService auditLogService;
 
 	public GoodsIssueServiceImpl(GoodsIssueRepository issueRepository, ItemRepository itemRepository,
 			WarehouseRepository warehouseRepository, WarehouseLocationRepository locationRepository,
 			UnitOfMeasureRepository uomRepository, UomConversionRepository uomConversionRepository,
 			StockBatchRepository stockBatchRepository, StockSerialRepository stockSerialRepository,
 			CustomerRepository customerRepository, DocumentSequenceService documentSequenceService,
-			StockMovementService stockMovementService, AuthenticationService authenticationService) {
+			StockMovementService stockMovementService, AuthenticationService authenticationService,
+			InventoryAuditLogService auditLogService) {
 		this.issueRepository = issueRepository;
 		this.itemRepository = itemRepository;
 		this.warehouseRepository = warehouseRepository;
@@ -85,6 +88,7 @@ public class GoodsIssueServiceImpl implements GoodsIssueService {
 		this.documentSequenceService = documentSequenceService;
 		this.stockMovementService = stockMovementService;
 		this.authenticationService = authenticationService;
+		this.auditLogService = auditLogService;
 	}
 
 	@Override
@@ -137,6 +141,9 @@ public class GoodsIssueServiceImpl implements GoodsIssueService {
 		}
 
 		GoodsIssue saved = this.issueRepository.save(issue);
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_ISSUE, saved.getId(), saved.getDocNo(),
+				isUpdate ? InventoryAuditAction.UPDATED.getCode() : InventoryAuditAction.CREATED.getCode(), null);
+
 		return new GoodsIssueDTO(saved);
 	}
 
@@ -242,7 +249,9 @@ public class GoodsIssueServiceImpl implements GoodsIssueService {
 		GoodsIssue issue = this.issueRepository.findById(id).orElseThrow(() -> new Exception("Goods issue not found!"));
 		requireStatus(issue, InventoryDocStatus.DRAFT);
 		issue.setStatus(InventoryDocStatus.SUBMITTED.getCode());
-		return new GoodsIssueDTO(this.issueRepository.save(issue));
+		GoodsIssue saved = this.issueRepository.save(issue);
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_ISSUE, saved.getId(), saved.getDocNo(), InventoryAuditAction.SUBMITTED.getCode(), null);
+		return new GoodsIssueDTO(saved);
 	}
 
 	@Override
@@ -256,7 +265,9 @@ public class GoodsIssueServiceImpl implements GoodsIssueService {
 		issue.setApprovedBy(currentUser);
 		issue.setApprovedTime(new Date());
 
-		return new GoodsIssueDTO(this.issueRepository.save(issue));
+		GoodsIssue saved = this.issueRepository.save(issue);
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_ISSUE, saved.getId(), saved.getDocNo(), InventoryAuditAction.APPROVED.getCode(), null);
+		return new GoodsIssueDTO(saved);
 	}
 
 	@Override
@@ -289,7 +300,9 @@ public class GoodsIssueServiceImpl implements GoodsIssueService {
 		issue.setPostedBy(currentUser);
 		issue.setPostedTime(new Date());
 
-		return new GoodsIssueDTO(this.issueRepository.save(issue));
+		GoodsIssue saved = this.issueRepository.save(issue);
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_ISSUE, saved.getId(), saved.getDocNo(), InventoryAuditAction.POSTED.getCode(), null);
+		return new GoodsIssueDTO(saved);
 	}
 
 	private void consumeSerialsForLine(Item item, GoodsIssueLine line) throws Exception {
@@ -323,7 +336,9 @@ public class GoodsIssueServiceImpl implements GoodsIssueService {
 		}
 
 		issue.setStatus(InventoryDocStatus.CANCELLED.getCode());
-		return new GoodsIssueDTO(this.issueRepository.save(issue));
+		GoodsIssue saved = this.issueRepository.save(issue);
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_ISSUE, saved.getId(), saved.getDocNo(), InventoryAuditAction.CANCELLED.getCode(), null);
+		return new GoodsIssueDTO(saved);
 	}
 
 	@Override
@@ -335,6 +350,7 @@ public class GoodsIssueServiceImpl implements GoodsIssueService {
 			throw new Exception("Only draft goods issues can be deleted!");
 		}
 
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_ISSUE, issue.getId(), issue.getDocNo(), InventoryAuditAction.DELETED.getCode(), null);
 		this.issueRepository.delete(issue);
 		return true;
 	}

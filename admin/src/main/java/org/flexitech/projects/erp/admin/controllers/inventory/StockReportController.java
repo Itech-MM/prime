@@ -8,12 +8,16 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.flexitech.projects.erp.admin.configs.MenuSecurity;
 import org.flexitech.projects.erp.commons.CommonValidators;
 import org.flexitech.projects.erp.commons.MenuCodeConstants;
+import org.flexitech.projects.erp.commons.enums.InventoryAuditAction;
 import org.flexitech.projects.erp.commons.enums.StockMovementType;
 import org.flexitech.projects.erp.dto.SearchResultDTO;
+import org.flexitech.projects.erp.dto.inventory.InventoryAuditLogDTO;
 import org.flexitech.projects.erp.dto.inventory.StockBalanceDTO;
 import org.flexitech.projects.erp.dto.inventory.StockLedgerDTO;
+import org.flexitech.projects.erp.dto.inventory.search.InventoryAuditLogSearchDTO;
 import org.flexitech.projects.erp.dto.inventory.search.StockBalanceSearchDTO;
 import org.flexitech.projects.erp.dto.inventory.search.StockLedgerSearchDTO;
+import org.flexitech.projects.erp.services.inventory.InventoryAuditLogService;
 import org.flexitech.projects.erp.services.inventory.StockReportService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,13 +39,16 @@ public class StockReportController {
 
 	private static final String INV_REPORT_ACCESS =
 			"@menuSecurity.hasMenuAccess('" + MenuCodeConstants.MENU_INV_STOCK_ON_HAND + "') or @menuSecurity.hasMenuView('" + MenuCodeConstants.MENU_INV_STOCK_ON_HAND + "')"
-			+ " or @menuSecurity.hasMenuAccess('" + MenuCodeConstants.MENU_INV_STOCK_CARD + "') or @menuSecurity.hasMenuView('" + MenuCodeConstants.MENU_INV_STOCK_CARD + "')";
+			+ " or @menuSecurity.hasMenuAccess('" + MenuCodeConstants.MENU_INV_STOCK_CARD + "') or @menuSecurity.hasMenuView('" + MenuCodeConstants.MENU_INV_STOCK_CARD + "')"
+			+ " or @menuSecurity.hasMenuAccess('" + MenuCodeConstants.MENU_INV_STOCK_REPORT + "') or @menuSecurity.hasMenuView('" + MenuCodeConstants.MENU_INV_STOCK_REPORT + "')";
 
 	private final StockReportService stockReportService;
+	private final InventoryAuditLogService auditLogService;
 	private final MenuSecurity menuSecurity;
 
-	public StockReportController(StockReportService stockReportService, MenuSecurity menuSecurity) {
+	public StockReportController(StockReportService stockReportService, InventoryAuditLogService auditLogService, MenuSecurity menuSecurity) {
 		this.stockReportService = stockReportService;
+		this.auditLogService = auditLogService;
 		this.menuSecurity = menuSecurity;
 	}
 
@@ -52,7 +59,9 @@ public class StockReportController {
 		model.addAttribute("activeTab", tab);
 		model.addAttribute("viewStockOnHand", menuSecurity.checkMenuAccess(MenuCodeConstants.MENU_INV_STOCK_ON_HAND) || menuSecurity.checkMenuView(MenuCodeConstants.MENU_INV_STOCK_ON_HAND));
 		model.addAttribute("viewStockCard", menuSecurity.checkMenuAccess(MenuCodeConstants.MENU_INV_STOCK_CARD) || menuSecurity.checkMenuView(MenuCodeConstants.MENU_INV_STOCK_CARD));
+		model.addAttribute("viewAuditLog", menuSecurity.checkMenuAccess(MenuCodeConstants.MENU_INV_STOCK_REPORT) || menuSecurity.checkMenuView(MenuCodeConstants.MENU_INV_STOCK_REPORT));
 		model.addAttribute("movementTypeList", StockMovementType.getAll());
+		model.addAttribute("auditActionList", InventoryAuditAction.getAll());
 
 		return "pages/inventory/report/shell";
 	}
@@ -111,6 +120,41 @@ public class StockReportController {
 		}
 	}
 
+	@PostMapping("/inventory/reports/audit-log/search")
+	@PreAuthorize("@menuSecurity.hasMenuAccess('" + MenuCodeConstants.MENU_INV_STOCK_REPORT + "') or @menuSecurity.hasMenuView('" + MenuCodeConstants.MENU_INV_STOCK_REPORT + "')")
+	@ResponseBody
+	public SearchResultDTO<InventoryAuditLogDTO> searchAuditLog(@RequestBody AuditLogSearchRequest request,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+		try {
+			InventoryAuditLogSearchDTO searchDTO = new InventoryAuditLogSearchDTO();
+			searchDTO.setDocType(request.getDocType());
+			searchDTO.setDocNo(request.getDocNo());
+			searchDTO.setAction(request.getAction());
+
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			if (CommonValidators.validString(request.getFromDate())) {
+				Date from = sdf.parse(request.getFromDate());
+				searchDTO.setFromDate(from);
+			}
+			if (CommonValidators.validString(request.getToDate())) {
+				Date to = sdf.parse(request.getToDate());
+				to = new Date(to.getTime() + (24L * 60 * 60 * 1000) - 1);
+				searchDTO.setToDate(to);
+			}
+
+			Pageable pageable = PageRequest.of(page, size, Sort.by("createdTime").descending());
+			return auditLogService.searchAuditLog(searchDTO, pageable);
+		} catch (Exception e) {
+			log.error("Error searching audit log: {}", ExceptionUtils.getStackTrace(e));
+			SearchResultDTO<InventoryAuditLogDTO> empty = new SearchResultDTO<>();
+			empty.setResults(new ArrayList<>());
+			empty.setTotalRecords(0);
+			empty.setTotalPage(0);
+			empty.setPageNo(0);
+			return empty;
+		}
+	}
+
 	public static class StockCardSearchRequest {
 		private Long itemId;
 		private Long locationId;
@@ -124,6 +168,25 @@ public class StockReportController {
 		public void setLocationId(Long locationId) { this.locationId = locationId; }
 		public Integer getMovementType() { return movementType; }
 		public void setMovementType(Integer movementType) { this.movementType = movementType; }
+		public String getFromDate() { return fromDate; }
+		public void setFromDate(String fromDate) { this.fromDate = fromDate; }
+		public String getToDate() { return toDate; }
+		public void setToDate(String toDate) { this.toDate = toDate; }
+	}
+
+	public static class AuditLogSearchRequest {
+		private String docType;
+		private String docNo;
+		private Integer action;
+		private String fromDate;
+		private String toDate;
+
+		public String getDocType() { return docType; }
+		public void setDocType(String docType) { this.docType = docType; }
+		public String getDocNo() { return docNo; }
+		public void setDocNo(String docNo) { this.docNo = docNo; }
+		public Integer getAction() { return action; }
+		public void setAction(Integer action) { this.action = action; }
 		public String getFromDate() { return fromDate; }
 		public void setFromDate(String fromDate) { this.fromDate = fromDate; }
 		public String getToDate() { return toDate; }

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.flexitech.projects.erp.commons.CommonConstants;
 import org.flexitech.projects.erp.commons.CommonValidators;
 import org.flexitech.projects.erp.commons.InventoryRefDocTypes;
+import org.flexitech.projects.erp.commons.enums.InventoryAuditAction;
 import org.flexitech.projects.erp.commons.enums.InventoryDocStatus;
 import org.flexitech.projects.erp.commons.utils.DateUtils;
 import org.flexitech.projects.erp.dto.SearchResultDTO;
@@ -15,9 +16,9 @@ import org.flexitech.projects.erp.dto.inventory.StockAdjustmentDTO;
 import org.flexitech.projects.erp.dto.inventory.StockAdjustmentLineDTO;
 import org.flexitech.projects.erp.dto.inventory.search.StockAdjustmentSearchDTO;
 import org.flexitech.projects.erp.persistence.entities.inventory.Item;
-import org.flexitech.projects.erp.persistence.entities.inventory.StockBatch;
 import org.flexitech.projects.erp.persistence.entities.inventory.StockAdjustment;
 import org.flexitech.projects.erp.persistence.entities.inventory.StockAdjustmentLine;
+import org.flexitech.projects.erp.persistence.entities.inventory.StockBatch;
 import org.flexitech.projects.erp.persistence.entities.inventory.Warehouse;
 import org.flexitech.projects.erp.persistence.entities.inventory.WarehouseLocation;
 import org.flexitech.projects.erp.persistence.entities.user.User;
@@ -53,12 +54,13 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
 	private final DocumentSequenceService documentSequenceService;
 	private final StockMovementService stockMovementService;
 	private final AuthenticationService authenticationService;
+	private final InventoryAuditLogService auditLogService;
 
 	public StockAdjustmentServiceImpl(StockAdjustmentRepository adjustmentRepository, ItemRepository itemRepository,
 			WarehouseRepository warehouseRepository, WarehouseLocationRepository locationRepository,
 			StockBatchRepository stockBatchRepository, StockBalanceRepository stockBalanceRepository,
 			DocumentSequenceService documentSequenceService, StockMovementService stockMovementService,
-			AuthenticationService authenticationService) {
+			AuthenticationService authenticationService, InventoryAuditLogService auditLogService) {
 		this.adjustmentRepository = adjustmentRepository;
 		this.itemRepository = itemRepository;
 		this.warehouseRepository = warehouseRepository;
@@ -68,6 +70,7 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
 		this.documentSequenceService = documentSequenceService;
 		this.stockMovementService = stockMovementService;
 		this.authenticationService = authenticationService;
+		this.auditLogService = auditLogService;
 	}
 
 	@Override
@@ -110,6 +113,9 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
 		}
 
 		StockAdjustment saved = this.adjustmentRepository.save(adjustment);
+		this.auditLogService.log(InventoryRefDocTypes.STOCK_ADJUSTMENT, saved.getId(), saved.getDocNo(),
+				isUpdate ? InventoryAuditAction.UPDATED.getCode() : InventoryAuditAction.CREATED.getCode(), null);
+
 		return new StockAdjustmentDTO(saved);
 	}
 
@@ -139,6 +145,9 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
 
 		if (lineDTO.getActualQty() == null) {
 			throw new Exception("Actual quantity is required for item " + item.getName() + "!");
+		}
+		if (lineDTO.getUnitCost() == null) {
+			throw new Exception("Unit cost is required for item " + item.getName() + "!");
 		}
 
 		StockAdjustmentLine line = new StockAdjustmentLine();
@@ -178,7 +187,9 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
 		StockAdjustment adjustment = this.adjustmentRepository.findById(id).orElseThrow(() -> new Exception("Stock adjustment not found!"));
 		requireStatus(adjustment, InventoryDocStatus.DRAFT);
 		adjustment.setStatus(InventoryDocStatus.SUBMITTED.getCode());
-		return new StockAdjustmentDTO(this.adjustmentRepository.save(adjustment));
+		StockAdjustment saved = this.adjustmentRepository.save(adjustment);
+		this.auditLogService.log(InventoryRefDocTypes.STOCK_ADJUSTMENT, saved.getId(), saved.getDocNo(), InventoryAuditAction.SUBMITTED.getCode(), null);
+		return new StockAdjustmentDTO(saved);
 	}
 
 	@Override
@@ -192,7 +203,9 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
 		adjustment.setApprovedBy(currentUser);
 		adjustment.setApprovedTime(new Date());
 
-		return new StockAdjustmentDTO(this.adjustmentRepository.save(adjustment));
+		StockAdjustment saved = this.adjustmentRepository.save(adjustment);
+		this.auditLogService.log(InventoryRefDocTypes.STOCK_ADJUSTMENT, saved.getId(), saved.getDocNo(), InventoryAuditAction.APPROVED.getCode(), null);
+		return new StockAdjustmentDTO(saved);
 	}
 
 	@Override
@@ -226,7 +239,9 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
 		adjustment.setPostedBy(currentUser);
 		adjustment.setPostedTime(new Date());
 
-		return new StockAdjustmentDTO(this.adjustmentRepository.save(adjustment));
+		StockAdjustment saved = this.adjustmentRepository.save(adjustment);
+		this.auditLogService.log(InventoryRefDocTypes.STOCK_ADJUSTMENT, saved.getId(), saved.getDocNo(), InventoryAuditAction.POSTED.getCode(), null);
+		return new StockAdjustmentDTO(saved);
 	}
 
 	@Override
@@ -242,7 +257,9 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
 		}
 
 		adjustment.setStatus(InventoryDocStatus.CANCELLED.getCode());
-		return new StockAdjustmentDTO(this.adjustmentRepository.save(adjustment));
+		StockAdjustment saved = this.adjustmentRepository.save(adjustment);
+		this.auditLogService.log(InventoryRefDocTypes.STOCK_ADJUSTMENT, saved.getId(), saved.getDocNo(), InventoryAuditAction.CANCELLED.getCode(), null);
+		return new StockAdjustmentDTO(saved);
 	}
 
 	@Override
@@ -254,6 +271,7 @@ public class StockAdjustmentServiceImpl implements StockAdjustmentService {
 			throw new Exception("Only draft stock adjustments can be deleted!");
 		}
 
+		this.auditLogService.log(InventoryRefDocTypes.STOCK_ADJUSTMENT, adjustment.getId(), adjustment.getDocNo(), InventoryAuditAction.DELETED.getCode(), null);
 		this.adjustmentRepository.delete(adjustment);
 		return true;
 	}

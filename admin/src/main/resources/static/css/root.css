@@ -963,6 +963,10 @@ html {
 	color: var(--primary-text-color);
 }
 
+.needs-validation select.is-invalid + .select2-container .select2-selection {
+	border-color: #dc3545 !important;
+}
+
 .select2-results__message {
 	color: #94a3b8;
 	font-size: .85rem;

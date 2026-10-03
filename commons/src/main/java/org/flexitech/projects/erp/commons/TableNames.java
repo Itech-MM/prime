@@ -43,4 +43,6 @@ public class TableNames {
     public static final String INV_STOCK_ADJUSTMENT_TBL = "inv_stock_adjustment";
     public static final String INV_STOCK_ADJUSTMENT_LINE_TBL = "inv_stock_adjustment_line";
     public static final String INV_DOC_SEQUENCE_TBL = "inv_doc_sequence";
+    
+    public static final String INV_AUDIT_LOG_TBL = "inv_audit_log";
 }

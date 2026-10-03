@@ -12,7 +12,7 @@
 
 		<div class="page-header">
 			<h1 class="h3 mb-0 text-gray-800">Inventory Reports</h1>
-			<p class="text-muted mb-0">Current stock levels and movement history</p>
+			<p class="text-muted mb-0">Current stock levels, movement history and audit trail</p>
 		</div>
 
 		<div class="card">
@@ -20,6 +20,7 @@
 				<ul class="nav nav-tabs border-bottom-0" id="reportTabs" role="tablist">
 					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='stock-on-hand', label='Stock On Hand', icon='fas fa-boxes', visible=${viewStockOnHand}, active=${activeTab == 'stock-on-hand'})}"></li>
 					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='stock-card', label='Stock Card', icon='fas fa-receipt', visible=${viewStockCard}, active=${activeTab == 'stock-card'})}"></li>
+					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='audit-log', label='Audit Log', icon='fas fa-history', visible=${viewAuditLog}, active=${activeTab == 'audit-log'})}"></li>
 				</ul>
 			</div>
 
@@ -98,6 +99,52 @@
 						</div>
 					</div>
 
+					<div class="tab-pane fade" th:classappend="${activeTab == 'audit-log'} ? ' show active'" id="audit-log" role="tabpanel">
+						<div class="d-flex gap-2 flex-wrap align-items-end mb-3">
+							<div>
+								<label class="form-label small fw-bold">Doc Type</label>
+								<select id="alDocTypeFilter" class="form-select form-select-sm" style="width:180px">
+									<option value="">All</option>
+									<option value="GOODS_RECEIPT">Goods Receipt</option>
+									<option value="GOODS_ISSUE">Goods Issue</option>
+									<option value="STOCK_ADJUSTMENT">Stock Adjustment</option>
+								</select>
+							</div>
+							<div>
+								<label class="form-label small fw-bold">Doc No</label>
+								<input type="text" id="alDocNoInput" class="form-control form-control-sm" style="width:180px" placeholder="e.g. GRN-2026-000123">
+							</div>
+							<div>
+								<label class="form-label small fw-bold">Action</label>
+								<select id="alActionFilter" class="form-select form-select-sm" style="width:160px">
+									<option value="">All</option>
+									<option th:each="a : ${auditActionList}" th:value="${a.code}" th:text="${a.desc}"></option>
+								</select>
+							</div>
+							<div>
+								<label class="form-label small fw-bold">From</label>
+								<input type="date" id="alFromDate" class="form-control form-control-sm">
+							</div>
+							<div>
+								<label class="form-label small fw-bold">To</label>
+								<input type="date" id="alToDate" class="form-control form-control-sm">
+							</div>
+							<button type="button" id="alSearchBtn" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+							<button type="button" id="alResetBtn" class="btn btn-sm btn-outline-secondary"><i class="fas fa-redo"></i></button>
+						</div>
+						<div id="alLoadingSpinner" class="text-center d-none py-4"><div class="spinner-border text-primary"></div></div>
+						<div class="table-responsive" id="alTableContainer">
+							<table class="table table-hover table-striped align-middle">
+								<thead class="table-light"><tr><th>Date</th><th>Doc Type</th><th>Doc No</th><th>Action</th><th>By</th><th>Remarks</th></tr></thead>
+								<tbody id="alTableBody"></tbody>
+							</table>
+						</div>
+						<div class="d-flex justify-content-between align-items-center mt-3" id="alPagingWrap">
+							<div class="text-muted small" id="alPageInfo"></div>
+							<nav><ul id="alPagination" class="pagination pagination-sm"></ul></nav>
+						</div>
+					</div>
+
 				</div>
 			</div>
 		</div>
@@ -107,6 +154,7 @@
 		<script th:src="@{/plugins/jquery/pagination/jquery.twbsPagination.min.js}"></script>
 		<script th:src="@{/js/inventory/report/stock-on-hand.js}"></script>
 		<script th:src="@{/js/inventory/report/stock-card.js}"></script>
+		<script th:src="@{/js/inventory/report/audit-log.js}"></script>
 		<script>
 		$(document).ready(function () {
 			var initialTab = $('#activeTab').val() || 'stock-on-hand';

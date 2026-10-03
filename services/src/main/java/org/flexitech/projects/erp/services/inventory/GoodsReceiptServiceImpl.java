@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.flexitech.projects.erp.commons.CommonConstants;
 import org.flexitech.projects.erp.commons.CommonValidators;
 import org.flexitech.projects.erp.commons.InventoryRefDocTypes;
+import org.flexitech.projects.erp.commons.enums.InventoryAuditAction;
 import org.flexitech.projects.erp.commons.enums.InventoryDocStatus;
 import org.flexitech.projects.erp.commons.enums.TrackingType;
 import org.flexitech.projects.erp.commons.utils.DateUtils;
@@ -65,14 +66,14 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
 	private final StockMovementService stockMovementService;
 	private final AuthenticationService authenticationService;
 	private final UnitOfMeasureRepository uomRepository;
-
+	private final InventoryAuditLogService auditLogService;
 
 	public GoodsReceiptServiceImpl(GoodsReceiptRepository receiptRepository, ItemRepository itemRepository,
 			SupplierRepository supplierRepository, WarehouseRepository warehouseRepository,
 			WarehouseLocationRepository locationRepository, StockBatchRepository stockBatchRepository,
 			StockSerialRepository stockSerialRepository, UomConversionRepository uomConversionRepository,
 			DocumentSequenceService documentSequenceService, StockMovementService stockMovementService,
-			AuthenticationService authenticationService, UnitOfMeasureRepository uomRepository) {
+			AuthenticationService authenticationService, UnitOfMeasureRepository uomRepository, InventoryAuditLogService auditLogService) {
 		this.receiptRepository = receiptRepository;
 		this.itemRepository = itemRepository;
 		this.supplierRepository = supplierRepository;
@@ -85,6 +86,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
 		this.stockMovementService = stockMovementService;
 		this.authenticationService = authenticationService;
 		this.uomRepository = uomRepository;
+		this.auditLogService = auditLogService;
 	}
 
 	@Override
@@ -135,6 +137,9 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
 		receipt.setTotalAmount(totalAmount);
 
 		GoodsReceipt saved = this.receiptRepository.save(receipt);
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_RECEIPT, saved.getId(), saved.getDocNo(),
+				isUpdate ? InventoryAuditAction.UPDATED.getCode() : InventoryAuditAction.CREATED.getCode(), null);
+		
 		return new GoodsReceiptDTO(saved);
 	}
 
@@ -239,7 +244,9 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
 		GoodsReceipt receipt = this.receiptRepository.findById(id).orElseThrow(() -> new Exception("Goods receipt not found!"));
 		requireStatus(receipt, InventoryDocStatus.DRAFT);
 		receipt.setStatus(InventoryDocStatus.SUBMITTED.getCode());
-		return new GoodsReceiptDTO(this.receiptRepository.save(receipt));
+		GoodsReceipt saved = this.receiptRepository.save(receipt);
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_RECEIPT, saved.getId(), saved.getDocNo(), InventoryAuditAction.SUBMITTED.getCode(), null);
+		return new GoodsReceiptDTO(saved);
 	}
 
 	@Override
@@ -253,7 +260,9 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
 		receipt.setApprovedBy(currentUser);
 		receipt.setApprovedTime(new Date());
 
-		return new GoodsReceiptDTO(this.receiptRepository.save(receipt));
+		GoodsReceipt saved = this.receiptRepository.save(receipt);
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_RECEIPT, saved.getId(), saved.getDocNo(), InventoryAuditAction.APPROVED.getCode(), null);
+		return new GoodsReceiptDTO(saved);
 	}
 
 	@Override
@@ -279,7 +288,9 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
 		receipt.setPostedBy(currentUser);
 		receipt.setPostedTime(new Date());
 
-		return new GoodsReceiptDTO(this.receiptRepository.save(receipt));
+		GoodsReceipt saved = this.receiptRepository.save(receipt);
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_RECEIPT, saved.getId(), saved.getDocNo(), InventoryAuditAction.POSTED.getCode(), null);
+		return new GoodsReceiptDTO(saved);
 	}
 
 	private StockBatch resolveBatchForPosting(Item item, GoodsReceiptLine line) {
@@ -336,7 +347,9 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
 		}
 
 		receipt.setStatus(InventoryDocStatus.CANCELLED.getCode());
-		return new GoodsReceiptDTO(this.receiptRepository.save(receipt));
+		GoodsReceipt saved = this.receiptRepository.save(receipt);
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_RECEIPT, saved.getId(), saved.getDocNo(), InventoryAuditAction.CANCELLED.getCode(), null);
+		return new GoodsReceiptDTO(saved);
 	}
 
 	@Override
@@ -347,6 +360,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
 		if (!InventoryDocStatus.DRAFT.getCode().equals(receipt.getStatus())) {
 			throw new Exception("Only draft goods receipts can be deleted!");
 		}
+		this.auditLogService.log(InventoryRefDocTypes.GOODS_RECEIPT, receipt.getId(), receipt.getDocNo(), InventoryAuditAction.DELETED.getCode(), null);
 
 		this.receiptRepository.delete(receipt);
 		return true;

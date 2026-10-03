@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layouts/base-layout}">
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base-layout}">
 <head>
 <title>Stock Adjustment</title>
 </head>
@@ -9,70 +9,113 @@
 	<div layout:fragment="content">
 
 		<input type="hidden" id="adjustmentId" th:value="${adjustmentDTO.id}">
-		<input type="hidden" id="adjustmentStatus" th:value="${adjustmentDTO.status}">
-		<input type="hidden" id="canEdit" th:value="${canEdit}">
-		<input type="hidden" id="canApprove" th:value="${canApprove}">
+		<input type="hidden" id="adjustmentStatus"
+			th:value="${adjustmentDTO.status}"> <input type="hidden"
+			id="canEdit" th:value="${canEdit}"> <input type="hidden"
+			id="canApprove" th:value="${canApprove}">
 
-		<div class="page-header d-flex justify-content-between align-items-start">
+		<div
+			class="page-header d-flex justify-content-between align-items-start">
 			<div>
 				<h1 class="h3 mb-0 text-gray-800">
-					Stock Adjustment
-					<span th:if="${adjustmentDTO.docNo}" class="text-muted" th:text="'- ' + ${adjustmentDTO.docNo}"></span>
+					Stock Adjustment <span th:if="${adjustmentDTO.docNo}"
+						class="text-muted" th:text="'- ' + ${adjustmentDTO.docNo}"></span>
 				</h1>
 				<p class="text-muted mb-0">
-					<span th:if="${adjustmentDTO.statusDesc}" class="badge bg-info text-dark" th:text="${adjustmentDTO.statusDesc}">Draft</span>
-					<span th:unless="${adjustmentDTO.statusDesc}" class="text-muted">New document</span>
+					<span th:if="${adjustmentDTO.statusDesc}"
+						class="badge bg-info text-dark"
+						th:text="${adjustmentDTO.statusDesc}">Draft</span> <span
+						th:unless="${adjustmentDTO.statusDesc}" class="text-muted">New
+						document</span>
 				</p>
 			</div>
-			<a th:href="@{/inventory/stock-documents(tab='stock-adjustments')}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to List</a>
+			<a th:href="@{/inventory/stock-documents(tab='stock-adjustments')}"
+				class="btn btn-outline-secondary btn-sm"><i
+				class="fas fa-arrow-left me-1"></i> Back to List</a>
 		</div>
 
-		<div class="card mb-3">
-			<div class="card-header bg-white py-3"><h6 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Adjustment Details</h6></div>
-			<div class="card-body">
-				<div class="row g-3">
-					<div class="col-md-4">
-						<label class="form-label fw-bold small">Warehouse <span class="text-danger">*</span></label>
-						<select id="warehouseId" class="form-select" style="width:100%" required></select>
-					</div>
-					<div class="col-md-4">
-						<label class="form-label fw-bold small">Reason <span class="text-danger">*</span></label>
-						<select id="reason" class="form-select" required>
-							<option value="">Select Reason</option>
-							<option th:each="r : ${reasonList}" th:value="${r.code}" th:text="${r.desc}"></option>
-						</select>
-					</div>
-					<div class="col-md-4">
-						<label class="form-label fw-bold small">Adjustment Date</label>
-						<input type="date" id="adjustmentDate" class="form-control">
-					</div>
-					<div class="col-12">
-						<label class="form-label fw-bold small">Remarks</label>
-						<input type="text" id="remarks" class="form-control">
+		<form id="stockAdjustmentForm" class="needs-validation" novalidate>
+
+			<div class="card mb-3">
+				<div class="card-header bg-white py-3">
+					<h6 class="mb-0">
+						<i class="fas fa-info-circle me-2 text-primary"></i>Adjustment
+						Details
+					</h6>
+				</div>
+				<div class="card-body">
+					<div class="row g-3">
+						<div class="col-md-4">
+							<label class="form-label fw-bold small">Warehouse <span
+								class="text-danger">*</span></label> <select id="warehouseId"
+								class="form-select" style="width: 100%" required></select>
+						</div>
+						<div class="col-md-4">
+							<label class="form-label fw-bold small">Reason <span
+								class="text-danger">*</span></label> <select id="reason"
+								class="form-select" required>
+								<option value="">Select Reason</option>
+								<option th:each="r : ${reasonList}" th:value="${r.code}"
+									th:text="${r.desc}"></option>
+							</select>
+						</div>
+						<div class="col-md-4">
+							<label class="form-label fw-bold small">Adjustment Date</label> <input
+								type="date" id="adjustmentDate" class="form-control">
+						</div>
+						<div class="col-12">
+							<label class="form-label fw-bold small">Remarks</label> <input
+								type="text" id="remarks" class="form-control">
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
 
-		<div class="card mb-3">
-			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-				<h6 class="mb-0"><i class="fas fa-list me-2 text-primary"></i>Line Items</h6>
-				<button type="button" id="addLineBtn" class="btn btn-outline-primary btn-sm"><i class="fas fa-plus me-1"></i> Add Line</button>
+			<div class="card mb-3">
+				<div
+					class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+					<h6 class="mb-0">
+						<i class="fas fa-list me-2 text-primary"></i>Line Items
+					</h6>
+					<button type="button" id="addLineBtn"
+						class="btn btn-outline-primary btn-sm">
+						<i class="fas fa-plus me-1"></i> Add Line
+					</button>
+				</div>
+				<div class="card-body">
+					<div id="linesContainer"></div>
+					<div th:if="${#lists.isEmpty(adjustmentDTO.lines)}" id="noLinesMsg"
+						class="text-center text-muted py-3">No lines added yet</div>
+					<p class="text-muted small mb-0">System quantity shown is a
+						snapshot taken when the line was added or last saved. The actual
+						difference applied to stock is always recalculated at the moment
+						of posting.</p>
+				</div>
 			</div>
-			<div class="card-body">
-				<div id="linesContainer"></div>
-				<div th:if="${#lists.isEmpty(adjustmentDTO.lines)}" id="noLinesMsg" class="text-center text-muted py-3">No lines added yet</div>
-				<p class="text-muted small mb-0">System quantity shown is a snapshot taken when the line was added or last saved. The actual difference applied to stock is always recalculated at the moment of posting.</p>
-			</div>
-		</div>
+		</form>
 
 		<div class="d-flex justify-content-end gap-2 mb-4" id="actionBar">
-			<button type="button" id="cancelDocBtn" class="btn btn-outline-danger"><i class="fas fa-ban me-1"></i> Cancel Document</button>
-			<button type="button" id="deleteDocBtn" class="btn btn-outline-danger"><i class="fas fa-trash me-1"></i> Delete</button>
-			<button type="button" id="saveDraftBtn" class="btn btn-outline-primary"><i class="fas fa-save me-1"></i> Save Draft</button>
-			<button type="button" id="submitDocBtn" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i> Submit</button>
-			<button type="button" id="approveDocBtn" class="btn btn-success"><i class="fas fa-check me-1"></i> Approve</button>
-			<button type="button" id="postDocBtn" class="btn btn-success"><i class="fas fa-check-double me-1"></i> Post</button>
+			<button type="button" id="cancelDocBtn"
+				class="btn btn-outline-danger">
+				<i class="fas fa-ban me-1"></i> Cancel Document
+			</button>
+			<button type="button" id="deleteDocBtn"
+				class="btn btn-outline-danger">
+				<i class="fas fa-trash me-1"></i> Delete
+			</button>
+			<button type="button" id="saveDraftBtn"
+				class="btn btn-outline-primary">
+				<i class="fas fa-save me-1"></i> Save Draft
+			</button>
+			<button type="button" id="submitDocBtn" class="btn btn-primary">
+				<i class="fas fa-paper-plane me-1"></i> Submit
+			</button>
+			<button type="button" id="approveDocBtn" class="btn btn-success">
+				<i class="fas fa-check me-1"></i> Approve
+			</button>
+			<button type="button" id="postDocBtn" class="btn btn-success">
+				<i class="fas fa-check-double me-1"></i> Post
+			</button>
 		</div>
 	</div>
 
@@ -81,13 +124,16 @@
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" id="confirmActionTitle">Confirm Action</h5>
+						<h5 class="modal-title" id="confirmActionTitle">Confirm
+							Action</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 					</div>
 					<div class="modal-body" id="confirmActionBody">Are you sure?</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-						<button type="button" id="confirmActionBtn" class="btn btn-primary">Confirm</button>
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">Cancel</button>
+						<button type="button" id="confirmActionBtn"
+							class="btn btn-primary">Confirm</button>
 					</div>
 				</div>
 			</div>
@@ -96,7 +142,7 @@
 
 	<div layout:fragment="scripts">
 		<script th:inline="javascript">
-			var EXISTING_ADJUSTMENT = /*[[${adjustmentDTO}]]*/ null;
+			var EXISTING_ADJUSTMENT = /*[[${adjustmentDTO}]]*/null;
 		</script>
 		<script th:src="@{/js/inventory/stock/stock-adjustment-setup.js}"></script>
 	</div>

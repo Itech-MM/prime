@@ -60,19 +60,19 @@ var StockAdjustmentSetup = (function () {
 				'<input type="hidden" class="line-item-id" value="' + (line && line.itemId ? line.itemId : '') + '">' +
 				'<input type="hidden" class="line-tracking-type" value="">' +
 				'<div class="row g-2 align-items-end">' +
-					'<div class="col-md-3"><label class="form-label small fw-bold">Item <span class="text-danger">*</span></label><select class="form-select line-item-select" style="width:100%"></select></div>' +
-					'<div class="col-md-3"><label class="form-label small fw-bold">Location <span class="text-danger">*</span></label><select class="form-select line-location-select" style="width:100%"></select></div>' +
+					'<div class="col-md-3"><label class="form-label small fw-bold">Item <span class="text-danger">*</span></label><select class="form-select line-item-select" style="width:100%" required></select></div>' +
+					'<div class="col-md-3"><label class="form-label small fw-bold">Location <span class="text-danger">*</span></label><select class="form-select line-location-select" style="width:100%" required></select></div>' +
 					'<div class="col-md-2"><label class="form-label small fw-bold">System Qty</label><div class="form-control-plaintext fw-bold line-system-qty">' + (line ? line.systemQty : '-') + '</div></div>' +
-					'<div class="col-md-2"><label class="form-label small fw-bold">Actual Qty <span class="text-danger">*</span></label><input type="number" step="0.0001" class="form-control line-actual-qty"></div>' +
+					'<div class="col-md-2"><label class="form-label small fw-bold">Actual Qty <span class="text-danger">*</span></label><input type="number" step="0.0001" class="form-control line-actual-qty" required></div>' +
 					'<div class="col-md-1"><label class="form-label small fw-bold">Diff</label><div class="form-control-plaintext fw-bold line-diff-qty">' + (diff != null ? diff : '-') + '</div></div>' +
 					'<div class="col-md-1 text-end"><button type="button" class="btn btn-outline-danger btn-sm remove-line-btn"><i class="fas fa-trash"></i></button></div>' +
 				'</div>' +
 				'<div class="row g-2 align-items-end mt-1 batch-fields d-none">' +
 					'<div class="col-md-4"><label class="form-label small fw-bold">Batch</label><select class="form-select line-batch-select" style="width:100%"></select></div>' +
-					'<div class="col-md-4"><label class="form-label small fw-bold">Unit Cost <span class="text-muted">(increases only)</span></label><input type="number" step="0.0001" class="form-control line-unit-cost"></div>' +
+					'<div class="col-md-4"><label class="form-label small fw-bold">Unit Cost <span class="text-danger">*</span></label><input type="number" step="0.0001" class="form-control line-unit-cost" required></div>' +
 				'</div>' +
 				'<div class="row g-2 align-items-end mt-1" id="noBatchCostWrap">' +
-					'<div class="col-md-4"><label class="form-label small fw-bold">Unit Cost <span class="text-muted">(increases only)</span></label><input type="number" step="0.0001" class="form-control line-unit-cost-nobatch"></div>' +
+					'<div class="col-md-4"><label class="form-label small fw-bold">Unit Cost <span class="text-danger">*</span></label><input type="number" step="0.0001" class="form-control line-unit-cost-nobatch" required></div>' +
 				'</div>' +
 				'<div class="row g-2 mt-1">' +
 					'<div class="col-12"><label class="form-label small fw-bold">Line Remarks</label><input type="text" class="form-control line-remarks" value="' + (line && line.remarks ? line.remarks : '') + '"></div>' +
@@ -140,6 +140,10 @@ var StockAdjustmentSetup = (function () {
 			row.find('.line-tracking-type').val(data.trackingType || '');
 			toggleTrackingFields(row, data.trackingType);
 			refreshBatchSelect(row);
+
+			if (data.standardCost != null) {
+				row.find('.line-unit-cost, .line-unit-cost-nobatch').val(data.standardCost);
+			}
 		});
 	}
 
@@ -235,16 +239,16 @@ var StockAdjustmentSetup = (function () {
 	}
 
 	function saveDraft(onSuccess) {
-		var payload = collectPayload();
-
-		if (!payload.warehouseId || !payload.reason) {
-			showToast('Warehouse and reason are required', 'error');
+		if (!window.validateForm('stockAdjustmentForm')) {
 			return;
 		}
-		if (!payload.lines.length) {
+
+		if ($('.line-row').length === 0) {
 			showToast('At least one line item is required', 'error');
 			return;
 		}
+
+		var payload = collectPayload();
 
 		$.ajax({
 			url: CONTEXT_PATH + 'inventory/stock-documents/stock-adjustments/save',
