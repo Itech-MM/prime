@@ -30,6 +30,7 @@ public class MenuRoleAccessDTO extends CommonDTO {
 	private Boolean canEdit;
 	private Boolean canDelete;
 	private Boolean isDefault;
+	private Boolean canApprove;
 	private Integer permissionPriority;
 
 	private List<MenuRoleAccessDTO> childMenuAccess = new ArrayList<MenuRoleAccessDTO>();
@@ -49,6 +50,7 @@ public class MenuRoleAccessDTO extends CommonDTO {
 		this.setCanEdit(entity.getCanEdit());
 		this.setCanDelete(entity.getCanDelete());
 		this.setIsDefault(entity.getIsDefault());
+		this.setCanApprove(entity.getCanApprove());
 		this.setPermissionPriority(entity.getPermissionPriority());
 	}
 
@@ -80,7 +82,7 @@ public class MenuRoleAccessDTO extends CommonDTO {
 
 		dto.setIsDefault(false);
 		dto.setPermissionPriority(0);
-
+		dto.setCanApprove(false);
 		return dto;
 	}
 

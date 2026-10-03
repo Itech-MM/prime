@@ -2,31 +2,25 @@
 <html xmlns:th="http://www.thymeleaf.org"
 	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
-<title layout:title-pattern="$CONTENT_TITLE | $LAYOUT_TITLE">E-commerce</title>
+<title layout:title-pattern="$CONTENT_TITLE | $LAYOUT_TITLE">PRIME</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet"
 	th:href="@{/plugins/bootstrap/css/bootstrap.min.css}">
 <link rel="stylesheet" th:href="@{/plugins/fontawesome/css/all.min.css}">
-<link rel="icon" th:href="@{/images/logo/ecommerce-logo.ico}"
-	type="image/x-icon">
+<link rel="icon" th:href="@{/images/logo/logo.ico}" type="image/x-icon">
 <link rel="stylesheet" th:href="@{/plugins/select2/css/select2.min.css}">
 <link rel="stylesheet" th:href="@{/css/root.css}">
 </head>
 <body class="pastel-gradient">
 	<div class="app-container">
-		<!-- Sidebar Fragment -->
 		<div th:replace="~{layouts/fragments/left-menu :: left-menu}"></div>
 
-		<!-- Main Content -->
 		<div class="main-content">
-			<!-- Header Fragment -->
 			<div th:replace="~{layouts/fragments/header :: header}"></div>
 
-			<!-- Content Section -->
 			<main class="content-wrapper">
 				<div layout:fragment="content">
-					<!-- Default content when no fragment is provided -->
 					<div class="page-header">
 						<h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
 						<p class="text-muted mb-0">Welcome to your admin dashboard</p>
@@ -42,96 +36,92 @@
 			</main>
 		</div>
 
-		<!-- Mobile Overlay -->
 		<div class="overlay" id="overlay"></div>
 	</div>
 
 	<div layout:fragment="modals"></div>
 
-	<!-- Toast Notification -->
-	<!-- <div th:if="${!#strings.isEmpty(errorMsg)}" class="toast-container">
-		<div class="toast-message-container" th:text="${errorMsg}"></div>
-	</div> -->
-
-	<!-- Scripts -->
 	<script th:src="@{/plugins/jquery/jquery.min.js}"></script>
 	<script th:src="@{/plugins/bootstrap/js/bootstrap.bundle.min.js}"></script>
 	<script th:src="@{/plugins/select2/js/select2.min.js}"></script>
 	<input type="hidden" id="context-path" th:value="@{/}">
-	<input type="hidden" id="unread-count" th:value="${unreadNotificationsCount}">
-	<!-- <input type="hidden" id="currency-code"
-		th:value="${shop.currencyDTO?.suffix}" /> -->
+	<input type="hidden" id="unread-count"
+		th:value="${unreadNotificationsCount}">
 	<script>
-	
-	var CONTEXT_PATH = "";
-	var CURRENCY_CODE = "";
-	var unreadCount = 0;
-		$(document).ready(
-				function() {
-					// Application Context Path
-					CONTEXT_PATH = $("#context-path").val();
-					CURRENCY_CODE = $("#currency-code").val();
-					unreadCount = $("#unread-count").val();
-					// Content animation - slide up from bottom
-					setTimeout(function() {
-						$('.content-wrapper').addClass('animate-in');
-					}, 300);
-					
-					// Mobile sidebar toggle
-					$('#sidebarToggle').click(function() {
-						$('.sidebar').toggleClass('show');
-						$('#overlay').toggleClass('show');
-					});
 
-					// Close sidebar when overlay is clicked
-					$('#overlay').click(function() {
-						$('.sidebar').removeClass('show');
-						$(this).removeClass('show');
-					});
-
-					// Set active menu item based on current URL
-					var currentPath = window.location.pathname;
-
-					if (currentPath !== '/' && currentPath.endsWith('/')) {
-						currentPath = currentPath.slice(0, -1);
-					}
-
-					$('#leftMenu .nav-link')
-							.each(
-									function() {
-										var link = $(this);
-										var linkPath = link.attr('href');
-
-										if (linkPath !== '/'
-												&& linkPath.endsWith('/')) {
-											linkPath = linkPath.slice(0, -1);
-										}
-
-										if (linkPath === currentPath) {
-											link.addClass('active');
-
-											if (link.parent().hasClass(
-													'sub-menu')) {
-												link.closest('.collapse')
-														.addClass('show');
-												link.closest('.collapse').prev(
-														'.dropdown-toggle')
-														.addClass('active');
-											}
-										}
-									});
-
-					// Auto-expand parent menu when child is active
-					$('.sub-menu .nav-link.active').each(
-							function() {
-								$(this).closest('.collapse').addClass('show');
-								$(this).closest('.collapse').prev(
-										'.dropdown-toggle').addClass('active');
-							});
-					
-					/* $('select').select2(); */
+var CONTEXT_PATH = "";
+var CURRENCY_CODE = "";
+var unreadCount = 0;
+	$(document).ready(
+			function() {
+				CONTEXT_PATH = $("#context-path").val();
+				CURRENCY_CODE = $("#currency-code").val();
+				unreadCount = $("#unread-count").val();
+				setTimeout(function() {
+					$('.content-wrapper').addClass('animate-in');
+				}, 300);
+				
+				$('#sidebarToggle').click(function() {
+					$('.sidebar').toggleClass('show');
+					$('#overlay').toggleClass('show');
 				});
-	</script>
+
+				$('#overlay').click(function() {
+					$('.sidebar').removeClass('show');
+					$(this).removeClass('show');
+				});
+
+				var currentPath = window.location.pathname;
+
+				if (currentPath !== '/' && currentPath.endsWith('/')) {
+					currentPath = currentPath.slice(0, -1);
+				}
+
+				$('#leftMenu .nav-link').removeClass('active');
+				$('#leftMenu .collapse').removeClass('show');
+				$('#leftMenu .dropdown-toggle').attr('aria-expanded', 'false');
+
+				var bestMatch = null;
+
+				$('#leftMenu .nav-link')
+						.each(
+								function() {
+									var link = $(this);
+									var linkPath = link.attr('href');
+
+									if (!linkPath || linkPath === '#') {
+										return;
+									}
+
+									if (linkPath !== '/'
+											&& linkPath.endsWith('/')) {
+										linkPath = linkPath.slice(0, -1);
+									}
+
+									var isMatch = (linkPath === '/')
+											? (currentPath === '/')
+											: currentPath.startsWith(linkPath);
+
+									if (isMatch) {
+										if (!bestMatch || linkPath.length > bestMatch.linkPath.length) {
+											bestMatch = { link: link, linkPath: linkPath };
+										}
+									}
+								});
+
+				if (bestMatch) {
+					bestMatch.link.addClass('active');
+
+					bestMatch.link.parents('.collapse').each(function() {
+						var collapseEl = $(this);
+						var toggleLink = collapseEl.prev('.dropdown-toggle');
+
+						collapseEl.addClass('show');
+						toggleLink.attr('aria-expanded', 'true');
+					});
+				}
+			});
+</script>
 
 
 
@@ -157,11 +147,11 @@
    });
 </script>
 
-	<script th:src="@{/js/realtime/notification-sound.js}"></script>
+	<!-- <script th:src="@{/js/realtime/notification-sound.js}"></script>
 	<script th:src="@{/js/realtime/sock.min.js}"></script>
 	<script th:src="@{/js/realtime/stomp.min.js}"></script>
 	<script th:src="@{/js/realtime/realtime.js}"></script>
-	<script th:src="@{/js/orders/realtime-order.js}"></script>
+	<script th:src="@{/js/orders/realtime-order.js}"></script> -->
 
 	<div layout:fragment="scripts"></div>
 </body>

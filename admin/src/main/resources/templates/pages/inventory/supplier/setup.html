@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base-layout}">
+<head>
+<title th:text="${supplierDTO.id != null} ? 'Update Supplier' : 'Supplier Setup'">Supplier Setup</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="page-header d-flex justify-content-between align-items-start">
+            <div>
+                <h1 class="h3 mb-0 text-gray-800" th:text="${supplierDTO.id != null} ? 'Update Supplier' : 'Create Supplier'">Supplier Setup</h1>
+                <p class="text-muted mb-0">Fill in the supplier details below</p>
+            </div>
+            <a th:href="@{/inventory/suppliers}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Suppliers</a>
+        </div>
+
+        <div th:if="${errorMsg != null}" class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${errorMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/inventory/suppliers/setup}" th:object="${supplierDTO}" method="post" id="supplierForm" class="needs-validation">
+                    <input type="hidden" th:field="*{id}">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Code <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{code}" class="form-control" required>
+                            <div class="form-text text-danger small" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold small">Name <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{name}" class="form-control" required>
+                            <div class="form-text text-danger small" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Contact Person</label>
+                            <input type="text" th:field="*{contactPerson}" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Phone</label>
+                            <input type="text" th:field="*{phone}" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Email</label>
+                            <input type="email" th:field="*{email}" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Payment Terms</label>
+                            <input type="text" th:field="*{paymentTerms}" class="form-control" placeholder="e.g. Net 30">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Status <span class="text-danger">*</span></label>
+                            <select th:field="*{status}" class="form-select" required>
+                                <option value="">Select Status</option>
+                                <option th:each="s : ${statusList}" th:value="${s.code}" th:text="${s.desc}" th:selected="${s.code == supplierDTO.status}"></option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Address</label>
+                            <textarea th:field="*{address}" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a th:href="@{/inventory/suppliers}" class="btn btn-outline-secondary"><i class="fas fa-times me-1"></i> Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>
+                            <span th:text="${supplierDTO.id != null} ? 'Update Supplier' : 'Create Supplier'">Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div layout:fragment="scripts">
+        <script th:src="@{/js/inventory/supplier/setup.js}"></script>
+    </div>
+</body>
+</html>

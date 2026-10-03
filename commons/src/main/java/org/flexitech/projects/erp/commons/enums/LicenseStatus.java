@@ -1,5 +1,10 @@
 package org.flexitech.projects.erp.commons.enums;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.flexitech.projects.erp.commons.CommonEnumObject;
+
 public enum LicenseStatus {
 
 	NOT_ACTIVATED(0, "Not Activated"),
@@ -32,5 +37,13 @@ public enum LicenseStatus {
 			}
 		}
 		return null;
+	}
+	
+	public static List<CommonEnumObject> getAll() {
+		List<CommonEnumObject> result = new ArrayList<CommonEnumObject>();
+		for (LicenseStatus s : values()) {
+			result.add(new CommonEnumObject(s.code, s.desc));
+		}
+		return result;
 	}
 }

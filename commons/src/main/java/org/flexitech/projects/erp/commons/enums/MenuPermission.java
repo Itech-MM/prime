@@ -4,7 +4,8 @@ public enum MenuPermission {
     VIEW("MENU_VIEW"),
     ACCESS("MENU_ACCESS"),
     EDIT("MENU_EDIT"),
-    DELETE("MENU_DELETE");
+    DELETE("MENU_DELETE"),
+    APPROVE("MENU_APPROVE");
     
     private final String authority;
     

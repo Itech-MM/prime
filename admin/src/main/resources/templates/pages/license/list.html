@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base-layout}">
+<head>
+    <title>License List</title>
+</head>
+<body>
+    <div layout:fragment="content">
+
+        <div class="page-header">
+            <h1 class="h3 mb-0 text-gray-800">License Management</h1>
+            <p class="text-muted mb-0">Search and view issued licenses</p>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-search me-2 text-primary"></i>Search Licenses
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="searchForm" th:object="${searchDTO}">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="code" class="form-label fw-bold small text-dark">License Code</label>
+                            <input type="text" th:field="*{code}" class="form-control" id="code" placeholder="Enter license code">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="customerId" class="form-label fw-bold small text-dark">Customer</label>
+                            <select class="form-select" id="customerId" style="width: 100%;"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="productId" class="form-label fw-bold small text-dark">Product</label>
+                            <select class="form-select" id="productId" style="width: 100%;"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label fw-bold small text-dark">Status</label>
+                            <select class="form-select" id="status">
+                                <option value="">All Statuses</option>
+                                <option th:each="s : ${statusList}" th:value="${s.code}" th:text="${s.desc}"></option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="button" id="searchBtn" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i> Search
+                                </button>
+                                <button type="button" id="resetBtn" class="btn btn-outline-secondary">
+                                    <i class="fas fa-redo me-1"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-certificate me-2 text-primary"></i>License List
+                </h6>
+                <div class="text-muted small">
+                    Showing <span id="resultShowing">0</span> of <span id="resultTotal">0</span> licenses
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="loadingSpinner" class="text-center d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading licenses...</p>
+                </div>
+
+                <div class="table-responsive" id="tableContainer">
+                    <table class="table table-hover table-striped" id="licensesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Code</th>
+                                <th>Customer</th>
+                                <th>Product</th>
+                                <th>Plan</th>
+                                <th>Expires At</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="licensesTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted small">
+                        Page <span id="currentPageLabel">1</span> of <span id="totalPageLabel">1</span>
+                    </div>
+                    <nav>
+                        <ul id="pagination" class="pagination pagination-sm"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div layout:fragment="scripts">
+        <script th:src="@{/plugins/jquery/pagination/jquery.twbsPagination.min.js}"></script>
+
+        <script>
+            let currentPage = 0;
+            let totalPages = 1;
+            const pageSize = 10;
+            let isLoading = false;
+            let currentRequest = null;
+
+            $(document).ready(function() {
+                $('#customerId').select2({
+                    width: '100%',
+                    placeholder: 'Filter by customer',
+                    allowClear: true,
+                    ajax: {
+                        url: CONTEXT_PATH + 'licenses/customers/select2',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return { q: params.term, page: params.page || 0 };
+                        },
+                        processResults: function(data) {
+                            return data;
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 0
+                });
+
+                $('#productId').select2({
+                    width: '100%',
+                    placeholder: 'Filter by product',
+                    allowClear: true,
+                    ajax: {
+                        url: CONTEXT_PATH + 'license-plans/products/select2',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return { q: params.term, page: params.page || 0 };
+                        },
+                        processResults: function(data) {
+                            return data;
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 0
+                });
+
+                searchLicenses(0);
+
+                $('#searchBtn').click(function() {
+                    searchLicenses(0);
+                });
+
+                $('#resetBtn').click(function() {
+                    $('#searchForm')[0].reset();
+                    $('#customerId').val(null).trigger('change');
+                    $('#productId').val(null).trigger('change');
+                    searchLicenses(0);
+                });
+
+                $('#searchForm input').keypress(function(e) {
+                    if (e.which === 13) {
+                        e.preventDefault();
+                        searchLicenses(0);
+                    }
+                });
+
+                $(document).on('click', '.view-btn', function() {
+                    viewLicense($(this).data('id'));
+                });
+            });
+
+            function initPagination(currentPage, totalPages) {
+                $('#pagination').twbsPagination('destroy');
+                $('#pagination').twbsPagination({
+                    totalPages: Math.max(totalPages, 1),
+                    visiblePages: 5,
+                    startPage: currentPage + 1,
+                    first: 'First',
+                    prev: 'Previous',
+                    next: 'Next',
+                    last: 'Last',
+                    onPageClick: function (event, page) {
+                        if (!isLoading) {
+                            searchLicenses(page - 1);
+                        }
+                    }
+                });
+            }
+
+            function searchLicenses(page) {
+                if (isLoading) {
+                    return;
+                }
+
+                if (currentRequest) {
+                    currentRequest.abort();
+                }
+
+                showLoading(true);
+                isLoading = true;
+
+                const searchData = {
+                    code: $('#code').val(),
+                    customerId: $('#customerId').val() || null,
+                    productId: $('#productId').val() || null,
+                    status: $('#status').val() || null,
+                    page: page,
+                    size: pageSize
+                };
+
+                currentRequest = $.ajax({
+                    url: CONTEXT_PATH + 'licenses/search',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(searchData),
+                    success: function(response) {
+                        updateTable(response.results);
+                        currentPage = response.pageNo;
+                        totalPages = response.totalPage;
+                        initPagination(currentPage, totalPages);
+                        $('#resultShowing').text(response.pageCount);
+                        $('#resultTotal').text(response.totalRecords);
+                        $('#currentPageLabel').text(currentPage + 1);
+                        $('#totalPageLabel').text(totalPages);
+                        showLoading(false);
+                        isLoading = false;
+                        currentRequest = null;
+                    },
+                    error: function(xhr, status, error) {
+                        showLoading(false);
+                        isLoading = false;
+                        currentRequest = null;
+
+                        if (status !== 'abort') {
+                            showToast('Error searching licenses: ' + (xhr.responseJSON?.message || error), 'error');
+                        }
+                    }
+                });
+            }
+
+            function updateTable(licenses) {
+                const tbody = $('#licensesTableBody');
+                tbody.empty();
+
+                if (licenses && licenses.length > 0) {
+                    licenses.forEach(function(license) {
+                        const statusBadge = `<span class="badge bg-info">${license.statusDesc || '-'}</span>`;
+
+                        const row = `
+                            <tr>
+                                <td>${license.code || '-'}</td>
+                                <td>${license.customerName || '-'}</td>
+                                <td>${license.productName || '-'}</td>
+                                <td>${license.planName || '-'}</td>
+                                <td>${license.expiresAt || '-'}</td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <button class="btn btn-outline-primary btn-sm view-btn" data-id="${license.id}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                } else {
+                    tbody.append(`
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-certificate fa-2x mb-2 d-block"></i>
+                                No licenses found
+                            </td>
+                        </tr>
+                    `);
+                }
+            }
+
+            function showLoading(show) {
+                if (show) {
+                    $('#loadingSpinner').removeClass('d-none');
+                    $('#tableContainer').addClass('d-none');
+                } else {
+                    $('#loadingSpinner').addClass('d-none');
+                    $('#tableContainer').removeClass('d-none');
+                }
+            }
+
+            function viewLicense(id) {
+                window.location.href = CONTEXT_PATH + 'licenses/detail?id=' + id;
+            }
+
+            window.viewLicense = viewLicense;
+        </script>
+    </div>
+</body>
+</html>

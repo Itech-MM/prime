@@ -42,7 +42,7 @@ public class UserController {
 		this.roleService = roleService;
 	}
 
-	@GetMapping("/user-setup")
+	@GetMapping("/users/setup")
 	@PreAuthorize("@menuSecurity.hasMenuAccess('"+MenuCodeConstants.MENU_USER_LIST+"') or @menuSecurity.hasMenuView('"+MenuCodeConstants.MENU_USER_LIST+"')")
 	public String userSetupPage(Model model, @RequestParam(required = false) Long id) {
 
@@ -77,7 +77,7 @@ public class UserController {
 	}
 
 
-	@PostMapping("/user-setup")
+	@PostMapping("/users/setup")
 	@PreAuthorize("@menuSecurity.hasMenuEdit('"+MenuCodeConstants.MENU_USER_LIST+"')")
     public String manageUser(@Valid @ModelAttribute UserDTO userDTO,
                            BindingResult result,

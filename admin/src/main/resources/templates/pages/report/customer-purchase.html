@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base-layout}">
+<head>
+<title>Customer Purchase Report</title>
+<link rel="stylesheet"
+	th:href="@{/plugins/datepicker/flatpickr.min.css}">
+<style>
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    align-items: stretch;
+}
+
+@media (max-width: 768px) {
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.summary-accent-card {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(201, 162, 39, 0.06);
+    border-left: 3px solid var(--accent-color);
+    max-height: 320px;
+}
+
+.summary-accent-card .card-body {
+    flex: 1;
+    min-height: 0;
+}
+
+.summary-list-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+</style>
+</head>
+<body>
+	<div layout:fragment="content">
+
+		<div class="page-header">
+			<h1 class="h3 mb-0 text-gray-800">Customer Purchase Report</h1>
+			<p class="text-muted mb-0">Purchase history and revenue summary</p>
+		</div>
+
+		<div class="card mb-4">
+			<div class="card-header bg-white py-3">
+				<h6 class="card-title mb-0">
+					<i class="fas fa-filter me-2 text-primary"></i>Filters
+				</h6>
+			</div>
+			<div class="card-body">
+				<div class="row g-3">
+					<div class="col-md-3">
+						<label for="customerId" class="form-label fw-bold small text-dark">Customer</label>
+						<select class="form-select" id="customerId" style="width: 100%;"></select>
+					</div>
+					<div class="col-md-3">
+						<label for="productId" class="form-label fw-bold small text-dark">Product</label>
+						<select class="form-select" id="productId" style="width: 100%;"></select>
+					</div>
+					<div class="col-md-3">
+						<label for="startDate" class="form-label fw-bold small text-dark">Start
+							Date</label> <input type="text" class="form-control" id="startDate"
+							placeholder="dd/MM/yyyy hh:mm a">
+					</div>
+					<div class="col-md-3">
+						<label for="endDate" class="form-label fw-bold small text-dark">End
+							Date</label> <input type="text" class="form-control" id="endDate"
+							placeholder="dd/MM/yyyy hh:mm a">
+					</div>
+					<div class="col-12">
+						<div class="d-flex gap-2">
+							<button type="button" id="searchBtn" class="btn btn-primary">
+								<i class="fas fa-search me-1"></i> Search
+							</button>
+							<button type="button" id="resetBtn"
+								class="btn btn-outline-secondary">
+								<i class="fas fa-redo me-1"></i> Reset
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		        <div class="summary-grid mb-4">
+            <div class="card summary-accent-card">
+                <div class="card-body d-flex flex-column">
+                    <p class="mb-1 small text-muted">Total Revenue</p>
+                    <h4 id="summaryTotal">-</h4>
+                    <p class="mb-0 small text-muted mt-auto"><span id="summaryCount">0</span> purchases</p>
+                </div>
+            </div>
+            <div class="card summary-accent-card">
+                <div class="card-header bg-transparent py-2">
+                    <h6 class="mb-0 small">By Product</h6>
+                </div>
+                <div class="card-body py-2 summary-list-body" id="byProductList"></div>
+            </div>
+            <div class="card summary-accent-card">
+                <div class="card-header bg-transparent py-2">
+                    <h6 class="mb-0 small">By Customer</h6>
+                </div>
+                <div class="card-body py-2 summary-list-body" id="byCustomerList"></div>
+            </div>
+        </div>
+
+		<div class="card">
+			<div
+				class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+				<h6 class="card-title mb-0">
+					<i class="fas fa-receipt me-2 text-primary"></i>Purchase Records
+				</h6>
+				<div class="text-muted small">
+					Showing <span id="resultShowing">0</span> of <span id="resultTotal">0</span>
+					records
+				</div>
+			</div>
+			<div class="card-body">
+				<div id="loadingSpinner" class="text-center d-none">
+					<div class="spinner-border text-primary" role="status">
+						<span class="visually-hidden">Loading...</span>
+					</div>
+				</div>
+				<div class="table-responsive" id="tableContainer">
+					<table class="table table-hover table-striped" id="purchasesTable">
+						<thead class="table-light">
+							<tr>
+								<th>License Code</th>
+								<th>Customer</th>
+								<th>Product</th>
+								<th>Plan</th>
+								<th>Price Paid</th>
+								<th>Purchased At</th>
+							</tr>
+						</thead>
+						<tbody id="purchasesTableBody">
+							<tr>
+								<td colspan="6" class="text-center text-muted py-4">Loading...</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="d-flex justify-content-between align-items-center mt-4">
+					<div class="text-muted small">
+						Page <span id="currentPageLabel">1</span> of <span
+							id="totalPageLabel">1</span>
+					</div>
+					<nav>
+						<ul id="pagination" class="pagination pagination-sm"></ul>
+					</nav>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div layout:fragment="scripts">
+		<script
+			th:src="@{/plugins/jquery/pagination/jquery.twbsPagination.min.js}"></script>
+		<script th:src="@{/plugins/datepicker/flatpickr.js}"></script>
+
+		<script>
+            let currentPage = 0;
+            let totalPages = 1;
+            const pageSize = 10;
+            let isLoading = false;
+            let currentRequest = null;
+
+            $(document).ready(function() {
+                flatpickr('#startDate', { enableTime: true, dateFormat: 'd/m/Y h:i K' });
+                flatpickr('#endDate', { enableTime: true, dateFormat: 'd/m/Y h:i K' });
+
+                $('#customerId').select2({
+                    width: '100%',
+                    placeholder: 'Filter by customer',
+                    allowClear: true,
+                    ajax: {
+                        url: CONTEXT_PATH + 'licenses/customers/select2',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return { q: params.term, page: params.page || 0 };
+                        },
+                        processResults: function(data) {
+                            return data;
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 0
+                });
+
+                $('#productId').select2({
+                    width: '100%',
+                    placeholder: 'Filter by product',
+                    allowClear: true,
+                    ajax: {
+                        url: CONTEXT_PATH + 'license-plans/products/select2',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return { q: params.term, page: params.page || 0 };
+                        },
+                        processResults: function(data) {
+                            return data;
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 0
+                });
+
+                runSearch(0);
+
+                $('#searchBtn').click(function() {
+                    runSearch(0);
+                });
+
+                $('#resetBtn').click(function() {
+                    $('#customerId').val(null).trigger('change');
+                    $('#productId').val(null).trigger('change');
+                    $('#startDate').val('');
+                    $('#endDate').val('');
+                    runSearch(0);
+                });
+            });
+
+            function getFilters() {
+                return {
+                    customerId: $('#customerId').val() || null,
+                    productId: $('#productId').val() || null,
+                    startDate: $('#startDate').val() || null,
+                    endDate: $('#endDate').val() || null
+                };
+            }
+
+            function initPagination(currentPage, totalPages) {
+                $('#pagination').twbsPagination('destroy');
+                $('#pagination').twbsPagination({
+                    totalPages: Math.max(totalPages, 1),
+                    visiblePages: 5,
+                    startPage: currentPage + 1,
+                    first: 'First',
+                    prev: 'Previous',
+                    next: 'Next',
+                    last: 'Last',
+                    onPageClick: function (event, page) {
+                        if (!isLoading) {
+                            runSearch(page - 1);
+                        }
+                    }
+                });
+            }
+
+            function runSearch(page) {
+                if (isLoading) {
+                    return;
+                }
+
+                if (currentRequest) {
+                    currentRequest.abort();
+                }
+
+                showLoading(true);
+                isLoading = true;
+
+                const filters = getFilters();
+                filters.page = page;
+                filters.size = pageSize;
+
+                currentRequest = $.ajax({
+                    url: CONTEXT_PATH + 'reports/customer-purchases/search',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(filters),
+                    success: function(response) {
+                        updateTable(response.results);
+                        currentPage = response.pageNo;
+                        totalPages = response.totalPage;
+                        initPagination(currentPage, totalPages);
+                        $('#resultShowing').text(response.pageCount);
+                        $('#resultTotal').text(response.totalRecords);
+                        $('#currentPageLabel').text(currentPage + 1);
+                        $('#totalPageLabel').text(totalPages);
+                        showLoading(false);
+                        isLoading = false;
+                        currentRequest = null;
+                    },
+                    error: function(xhr, status, error) {
+                        showLoading(false);
+                        isLoading = false;
+                        currentRequest = null;
+                        if (status !== 'abort') {
+                            showToast('Error loading report: ' + (xhr.responseJSON?.message || error), 'error');
+                        }
+                    }
+                });
+
+                $.ajax({
+                    url: CONTEXT_PATH + 'reports/customer-purchases/summary',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(getFilters()),
+                    success: function(summary) {
+                        updateSummary(summary);
+                    }
+                });
+            }
+
+            function updateTable(records) {
+                const tbody = $('#purchasesTableBody');
+                tbody.empty();
+
+                if (records && records.length > 0) {
+                    records.forEach(function(r) {
+                        const row = `
+                            <tr>
+                                <td>${r.code || '-'}</td>
+                                <td>${r.customerName || '-'}</td>
+                                <td>${r.productName || '-'}</td>
+                                <td>${r.planName || '-'}</td>
+                                <td>${r.priceDesc || '0'}</td>
+                                <td>${r.issuedAt || '-'}</td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                } else {
+                    tbody.append(`
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-receipt fa-2x mb-2 d-block"></i>
+                                No purchases found
+                            </td>
+                        </tr>
+                    `);
+                }
+            }
+
+            function updateSummary(summary) {
+                $('#summaryTotal').text(summary.totalAmountDesc || '0');
+                $('#summaryCount').text(summary.totalCount || 0);
+
+                const byProduct = $('#byProductList').empty();
+                if (summary.byProduct && summary.byProduct.length > 0) {
+                    summary.byProduct.forEach(function(g) {
+                        byProduct.append(`<div class="d-flex justify-content-between small py-1"><span>${g.label}</span><span>${g.totalAmountDesc} (${g.count})</span></div>`);
+                    });
+                } else {
+                    byProduct.append('<p class="text-muted small mb-0">No data</p>');
+                }
+
+                const byCustomer = $('#byCustomerList').empty();
+                if (summary.byCustomer && summary.byCustomer.length > 0) {
+                    summary.byCustomer.forEach(function(g) {
+                        byCustomer.append(`<div class="d-flex justify-content-between small py-1"><span>${g.label}</span><span>${g.totalAmountDesc} (${g.count})</span></div>`);
+                    });
+                } else {
+                    byCustomer.append('<p class="text-muted small mb-0">No data</p>');
+                }
+            }
+
+            function showLoading(show) {
+                if (show) {
+                    $('#loadingSpinner').removeClass('d-none');
+                    $('#tableContainer').addClass('d-none');
+                } else {
+                    $('#loadingSpinner').addClass('d-none');
+                    $('#tableContainer').removeClass('d-none');
+                }
+            }
+        </script>
+	</div>
+</body>
+</html>

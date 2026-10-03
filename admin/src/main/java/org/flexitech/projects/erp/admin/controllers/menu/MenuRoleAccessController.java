@@ -3,7 +3,6 @@ package org.flexitech.projects.erp.admin.controllers.menu;
 import java.util.List;
 
 import org.flexitech.projects.erp.commons.MenuCodeConstants;
-import org.flexitech.projects.erp.commons.enums.MenuGroupCode;
 import org.flexitech.projects.erp.dto.request.menu.CopyPermissionsRequest;
 import org.flexitech.projects.erp.dto.request.menu.MenuRoleAccessRequest;
 import org.flexitech.projects.erp.dto.request.menu.MenuRoleAccessTreeNode;
@@ -95,6 +94,7 @@ public class MenuRoleAccessController {
 	}
 
 	@PostMapping("/copy-permissions")
+	@PreAuthorize("@menuSecurity.hasMenuEdit('"+MenuCodeConstants.MENU_USER_MANAGEMENT_MENU_ACCESS_MANAGE+"')")
 	@ResponseBody
 	public ResponseEntity<ApiResponse<?>> copyPermissions(@RequestBody CopyPermissionsRequest request) {
 		try {

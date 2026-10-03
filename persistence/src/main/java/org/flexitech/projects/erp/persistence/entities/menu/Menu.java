@@ -17,6 +17,8 @@ import lombok.EqualsAndHashCode;
 @Table(name = TableNames.MENU_TBL)
 public class Menu extends BasedEntity{
 	private String name;
+	@Column(name = "name_mm")
+	private String nameMm;
 	private String code;
 	private String description;
 	private String icon;
@@ -30,4 +32,7 @@ public class Menu extends BasedEntity{
 	@ManyToOne
 	@JoinColumn(name = "parent_id")
 	private Menu parentMenu;
+	
+	@Column(name = "display_status")
+	private Integer displayStatus;
 }

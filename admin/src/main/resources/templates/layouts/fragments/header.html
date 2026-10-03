@@ -6,49 +6,88 @@
 		<header class="sticky-top main-header">
 			<nav class="navbar navbar-expand-lg py-0">
 				<div class="container-fluid px-3">
-					<button class="header-icon-btn d-lg-none me-2" id="sidebarToggle" type="button">
+					<button class="header-icon-btn d-lg-none me-2" id="sidebarToggle"
+						type="button">
 						<i class="fas fa-bars"></i>
 					</button>
-					
-					<a class="navbar-brand-modern d-lg-none" href="/">
-						<i class="fas fa-cube"></i>
-						<span>E-commerce</span>
+
+					<a class="navbar-brand-modern d-lg-none" href="/"> <i
+						class="fas fa-cube"></i> <span>PRIME</span>
 					</a>
 
 					<div class="d-flex align-items-center ms-auto gap-2">
-						<button id="soundToggleBtn" class="header-icon-btn" type="button" title="Notification Sound">
+						<button id="soundToggleBtn" class="header-icon-btn" type="button"
+							title="Notification Sound">
 							<i class="fas fa-volume-up"></i>
 						</button>
 
 						<div class="dropdown">
-							<button class="header-icon-btn position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-								<i class="fas fa-bell"></i>
-								<span id="notificationBadge" class="notification-badge-dot" style="display: none;"></span>
+							<button class="header-lang-btn" type="button"
+								id="languageDropdown" data-bs-toggle="dropdown"
+								aria-expanded="false">
+								<img class="lang-flag-img"
+									th:src="@{${#locale.language == 'my' ? '/images/icon/mm.png' : '/images/icon/gb.png'}}"
+									th:alt="${#locale.language == 'my' ? 'Myanmar' : 'English'}">
+								<i class="fas fa-chevron-down user-caret d-none d-sm-inline"></i>
 							</button>
-							<ul class="dropdown-menu dropdown-menu-end modern-dropdown-menu p-0" id="notificationList" style="width: 360px; max-height: 480px; overflow-y: auto;">
-								<li class="dropdown-header-modern">
-									<span>Notifications</span>
+							<ul
+								class="dropdown-menu dropdown-menu-end modern-dropdown-menu lang-menu"
+								aria-labelledby="languageDropdown">
+								<li><a class="dropdown-item dropdown-item-modern lang-item"
+									th:classappend="${#locale.language == 'en' ? 'active' : ''}"
+									href="?lang=en"> <img class="lang-flag-img"
+										th:src="@{/images/icon/gb.png}" alt="English"> <span
+										class="flex-grow-1">English</span> <i
+										class="fas fa-check lang-check"></i>
+								</a></li>
+								<li><a class="dropdown-item dropdown-item-modern lang-item"
+									th:classappend="${#locale.language == 'my' ? 'active' : ''}"
+									href="?lang=my"> <img class="lang-flag-img"
+										th:src="@{/images/icon/mm.png}" alt="Myanmar"> <span
+										class="flex-grow-1">မြန်မာ</span> <i
+										class="fas fa-check lang-check"></i>
+								</a></li>
+							</ul>
+						</div>
+
+						<div class="dropdown">
+							<button class="header-icon-btn position-relative" type="button"
+								id="notificationDropdown" data-bs-toggle="dropdown"
+								aria-expanded="false">
+								<i class="fas fa-bell"></i> <span id="notificationBadge"
+									class="notification-badge-dot" style="display: none;"></span>
+							</button>
+							<ul
+								class="dropdown-menu dropdown-menu-end modern-dropdown-menu p-0"
+								id="notificationList"
+								style="width: 360px; max-height: 480px; overflow-y: auto;">
+								<li class="dropdown-header-modern"><span>Notifications</span>
 								</li>
 								<th:block th:if="${#lists.isEmpty(notifications)}">
-									<li id="noNotificationsItem" class="dropdown-item-modern text-center text-muted py-4">
-										<i class="fas fa-inbox d-block mb-2 fs-4 text-neutral"></i>
-										No new notifications
+									<li id="noNotificationsItem"
+										class="dropdown-item-modern text-center text-muted py-4">
+										<i class="fas fa-inbox d-block mb-2 fs-4 text-neutral"></i> No
+										new notifications
 									</li>
 								</th:block>
 								<th:block th:each="n : ${notifications}">
 									<li class="dropdown-item-modern notification-item"
 										th:classappend="${n.readStatus == 0 ? 'unread-notification' : ''}"
-										th:data-notificationid="${n.id}" th:data-targetid="${n.targetId}" th:data-ordercode="${n.refCode}">
+										th:data-notificationid="${n.id}"
+										th:data-targetid="${n.targetId}"
+										th:data-ordercode="${n.refCode}">
 										<div class="d-flex gap-3">
 											<div class="notification-icon-wrapper flex-shrink-0">
 												<i th:class="${n.iconImage}"></i>
 											</div>
 											<div class="flex-grow-1" style="min-width: 0;">
-												<div class="d-flex justify-content-between align-items-baseline mb-1">
+												<div
+													class="d-flex justify-content-between align-items-baseline mb-1">
 													<span class="notification-title" th:text="${n.title}"></span>
 													<span class="notification-time" th:text="${n.receivedDate}"></span>
 												</div>
-												<p class="notification-desc mb-0 text-break" th:text="${n.description}"></p>
+												<p class="notification-desc mb-0 text-break"
+													th:text="${n.description}"></p>
 											</div>
 										</div>
 									</li>
@@ -60,23 +99,25 @@
 						</div>
 
 						<div class="dropdown">
-							<button class="header-user-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+							<button class="header-user-btn" type="button"
+								data-bs-toggle="dropdown" aria-expanded="false">
 								<div class="user-avatar">
 									<i class="fas fa-user"></i>
 								</div>
-								<span class="user-name d-none d-sm-inline" sec:authentication="name">Admin User</span>
-								<i class="fas fa-chevron-down user-caret d-none d-sm-inline"></i>
+								<span class="user-name d-none d-sm-inline"
+									sec:authentication="principal.user.name">Admin User</span> <i
+									class="fas fa-chevron-down user-caret d-none d-sm-inline"></i>
 							</button>
 							<ul class="dropdown-menu dropdown-menu-end modern-dropdown-menu">
-								<li>
-									<a class="dropdown-item dropdown-item-modern py-2" href="#">
-										<i class="fas fa-user-circle me-2 text-muted"></i> My Profile
-									</a>
-								</li>
+								<li><a class="dropdown-item dropdown-item-modern py-2"
+									href="#"> <i class="fas fa-user-circle me-2 text-muted"></i>
+										My Profile
+								</a></li>
 								<li><hr class="dropdown-divider my-1"></li>
 								<li>
 									<form th:action="@{/logout}" method="post" class="w-100">
-										<button type="submit" class="dropdown-item dropdown-item-modern text-danger py-2 w-100 border-0 bg-transparent text-start">
+										<button type="submit"
+											class="dropdown-item dropdown-item-modern text-danger py-2 w-100 border-0 bg-transparent text-start">
 											<i class="fas fa-sign-out-alt me-2"></i> Logout
 										</button>
 									</form>

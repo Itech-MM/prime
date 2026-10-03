@@ -32,6 +32,7 @@ public class WebConfig implements WebMvcConfigurer {
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		registry.addResourceHandler(imageContextPath + "**").addResourceLocations("file:" + imagePath + "/");
+		registry.addResourceHandler("/images/**").addResourceLocations("classpath:/static/images/");
 	}
 
 	@Bean

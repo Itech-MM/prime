@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base-layout}">
+<head>
+<title>Stock Documents</title>
+</head>
+<body>
+	<div layout:fragment="content">
+
+		<input type="hidden" id="activeTab" th:value="${activeTab}">
+		<input type="hidden" id="canEditGoodsReceipt" th:value="${canEditGoodsReceipt}">
+		<input type="hidden" id="canDeleteGoodsReceipt" th:value="${canDeleteGoodsReceipt}">
+		<input type="hidden" id="canEditGoodsIssue" th:value="${canEditGoodsIssue}">
+		<input type="hidden" id="canDeleteGoodsIssue" th:value="${canDeleteGoodsIssue}">
+		<input type="hidden" id="canEditStockAdjustment" th:value="${canEditStockAdjustment}">
+		<input type="hidden" id="canDeleteStockAdjustment" th:value="${canDeleteStockAdjustment}">
+
+		<div class="page-header">
+			<h1 class="h3 mb-0 text-gray-800">Stock Documents</h1>
+			<p class="text-muted mb-0">Goods receipt, goods issue and stock adjustment</p>
+		</div>
+
+		<div class="card">
+			<div class="card-header bg-white pt-3 pb-0 border-bottom-0">
+				<ul class="nav nav-tabs border-bottom-0" id="stockDocsTabs" role="tablist">
+					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='goods-receipts', label='Goods Receipt', icon='fas fa-truck-loading', visible=${viewGoodsReceipt}, active=${activeTab == 'goods-receipts'})}"></li>
+					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='goods-issues', label='Goods Issue', icon='fas fa-dolly', visible=${viewGoodsIssue}, active=${activeTab == 'goods-issues'})}"></li>
+					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='stock-adjustments', label='Stock Adjustment', icon='fas fa-balance-scale', visible=${viewStockAdjustment}, active=${activeTab == 'stock-adjustments'})}"></li>
+				</ul>
+			</div>
+
+			<div class="card-body">
+				<div class="tab-content" id="stockDocsTabContent">
+
+					<div class="tab-pane fade" th:classappend="${activeTab == 'goods-receipts'} ? ' show active'" id="goods-receipts" role="tabpanel">
+						<div class="d-flex justify-content-between align-items-center mb-3">
+							<div class="d-flex gap-2 flex-wrap flex-grow-1">
+								<input type="text" id="grDocNoInput" class="form-control form-control-sm" style="max-width:200px" placeholder="Doc No">
+								<select id="grStatusFilter" class="form-select form-select-sm" style="max-width:160px">
+									<option value="">All Status</option>
+									<option th:each="s : ${docStatusList}" th:value="${s.code}" th:text="${s.desc}"></option>
+								</select>
+								<button type="button" id="grSearchBtn" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+								<button type="button" id="grResetBtn" class="btn btn-sm btn-outline-secondary"><i class="fas fa-redo"></i></button>
+							</div>
+							<a th:if="${canEditGoodsReceipt}" th:href="@{/inventory/stock-documents/goods-receipts/setup}" class="btn btn-success btn-sm ms-2 text-nowrap"><i class="fas fa-plus me-1"></i> New Receipt</a>
+						</div>
+						<div id="grLoadingSpinner" class="text-center d-none py-4"><div class="spinner-border text-primary"></div></div>
+						<div class="table-responsive" id="grTableContainer">
+							<table class="table table-hover table-striped align-middle">
+								<thead class="table-light"><tr><th>Doc No</th><th>Supplier</th><th>Warehouse</th><th>Received Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+								<tbody id="grTableBody">
+									<tr th:each="gr : ${goodsReceiptList.results}">
+										<td th:text="${gr.docNo}">-</td>
+										<td th:text="${gr.supplierName} ?: '-'">-</td>
+										<td th:text="${gr.warehouseName} ?: '-'">-</td>
+										<td th:text="${gr.receivedDate} ?: '-'">-</td>
+										<td th:text="${gr.totalAmount} ?: '-'">-</td>
+										<td><span th:text="${gr.statusDesc}" class="badge bg-info text-dark">-</span></td>
+										<td>
+											<div class="btn-group btn-group-sm">
+												<a th:href="@{'/inventory/stock-documents/goods-receipts/setup?id=' + ${gr.id}}" class="btn btn-outline-primary"><i class="fas fa-eye"></i></a>
+												<button th:if="${canDeleteGoodsReceipt and gr.status == 1}" class="btn btn-outline-danger gr-delete-btn" th:data-id="${gr.id}" th:data-name="${gr.docNo}"><i class="fas fa-trash"></i></button>
+											</div>
+										</td>
+									</tr>
+									<tr th:if="${#lists.isEmpty(goodsReceiptList.results)}">
+										<td colspan="7" class="text-center text-muted py-4">No goods receipts found</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div class="d-flex justify-content-between align-items-center mt-3">
+							<div class="text-muted small" id="grPageInfo">Page <span th:text="${goodsReceiptList.pageNo + 1}">1</span> of <span th:text="${goodsReceiptList.totalPage}">1</span></div>
+							<nav><ul id="grPagination" class="pagination pagination-sm"></ul></nav>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" th:classappend="${activeTab == 'goods-issues'} ? ' show active'" id="goods-issues" role="tabpanel">
+						<div class="d-flex justify-content-between align-items-center mb-3">
+							<div class="d-flex gap-2 flex-wrap flex-grow-1">
+								<input type="text" id="giDocNoInput" class="form-control form-control-sm" style="max-width:200px" placeholder="Doc No">
+								<select id="giTypeFilter" class="form-select form-select-sm" style="max-width:160px">
+									<option value="">All Types</option>
+									<option th:each="t : ${issueTypeList}" th:value="${t.code}" th:text="${t.desc}"></option>
+								</select>
+								<select id="giStatusFilter" class="form-select form-select-sm" style="max-width:160px">
+									<option value="">All Status</option>
+									<option th:each="s : ${docStatusList}" th:value="${s.code}" th:text="${s.desc}"></option>
+								</select>
+								<button type="button" id="giSearchBtn" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+								<button type="button" id="giResetBtn" class="btn btn-sm btn-outline-secondary"><i class="fas fa-redo"></i></button>
+							</div>
+							<a th:if="${canEditGoodsIssue}" th:href="@{/inventory/stock-documents/goods-issues/setup}" class="btn btn-success btn-sm ms-2 text-nowrap"><i class="fas fa-plus me-1"></i> New Issue</a>
+						</div>
+						<div id="giLoadingSpinner" class="text-center d-none py-4"><div class="spinner-border text-primary"></div></div>
+						<div class="table-responsive" id="giTableContainer">
+							<table class="table table-hover table-striped align-middle">
+								<thead class="table-light"><tr><th>Doc No</th><th>Warehouse</th><th>Type</th><th>Issued To</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+								<tbody id="giTableBody">
+									<tr th:each="gi : ${goodsIssueList.results}">
+										<td th:text="${gi.docNo}">-</td>
+										<td th:text="${gi.warehouseName} ?: '-'">-</td>
+										<td th:text="${gi.issueTypeDesc} ?: '-'">-</td>
+										<td th:text="${gi.customerName ?: gi.issuedToName} ?: '-'">-</td>
+										<td th:text="${gi.totalAmount} ?: '-'">-</td>
+										<td><span th:text="${gi.statusDesc}" class="badge bg-info text-dark">-</span></td>
+										<td>
+											<div class="btn-group btn-group-sm">
+												<a th:href="@{'/inventory/stock-documents/goods-issues/setup?id=' + ${gi.id}}" class="btn btn-outline-primary"><i class="fas fa-eye"></i></a>
+												<button th:if="${canDeleteGoodsIssue and gi.status == 1}" class="btn btn-outline-danger gi-delete-btn" th:data-id="${gi.id}" th:data-name="${gi.docNo}"><i class="fas fa-trash"></i></button>
+											</div>
+										</td>
+									</tr>
+									<tr th:if="${#lists.isEmpty(goodsIssueList.results)}">
+										<td colspan="7" class="text-center text-muted py-4">No goods issues found</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div class="d-flex justify-content-between align-items-center mt-3">
+							<div class="text-muted small" id="giPageInfo">Page <span th:text="${goodsIssueList.pageNo + 1}">1</span> of <span th:text="${goodsIssueList.totalPage}">1</span></div>
+							<nav><ul id="giPagination" class="pagination pagination-sm"></ul></nav>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" th:classappend="${activeTab == 'stock-adjustments'} ? ' show active'" id="stock-adjustments" role="tabpanel">
+						<div class="d-flex justify-content-between align-items-center mb-3">
+							<div class="d-flex gap-2 flex-wrap flex-grow-1">
+								<input type="text" id="saDocNoInput" class="form-control form-control-sm" style="max-width:200px" placeholder="Doc No">
+								<select id="saReasonFilter" class="form-select form-select-sm" style="max-width:180px">
+									<option value="">All Reasons</option>
+									<option th:each="r : ${reasonList}" th:value="${r.code}" th:text="${r.desc}"></option>
+								</select>
+								<select id="saStatusFilter" class="form-select form-select-sm" style="max-width:160px">
+									<option value="">All Status</option>
+									<option th:each="s : ${docStatusList}" th:value="${s.code}" th:text="${s.desc}"></option>
+								</select>
+								<button type="button" id="saSearchBtn" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+								<button type="button" id="saResetBtn" class="btn btn-sm btn-outline-secondary"><i class="fas fa-redo"></i></button>
+							</div>
+							<a th:if="${canEditStockAdjustment}" th:href="@{/inventory/stock-documents/stock-adjustments/setup}" class="btn btn-success btn-sm ms-2 text-nowrap"><i class="fas fa-plus me-1"></i> New Adjustment</a>
+						</div>
+						<div id="saLoadingSpinner" class="text-center d-none py-4"><div class="spinner-border text-primary"></div></div>
+						<div class="table-responsive" id="saTableContainer">
+							<table class="table table-hover table-striped align-middle">
+								<thead class="table-light"><tr><th>Doc No</th><th>Warehouse</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+								<tbody id="saTableBody">
+									<tr th:each="sa : ${stockAdjustmentList.results}">
+										<td th:text="${sa.docNo}">-</td>
+										<td th:text="${sa.warehouseName} ?: '-'">-</td>
+										<td th:text="${sa.reasonDesc} ?: '-'">-</td>
+										<td><span th:text="${sa.statusDesc}" class="badge bg-info text-dark">-</span></td>
+										<td>
+											<div class="btn-group btn-group-sm">
+												<a th:href="@{'/inventory/stock-documents/stock-adjustments/setup?id=' + ${sa.id}}" class="btn btn-outline-primary"><i class="fas fa-eye"></i></a>
+												<button th:if="${canDeleteStockAdjustment and sa.status == 1}" class="btn btn-outline-danger sa-delete-btn" th:data-id="${sa.id}" th:data-name="${sa.docNo}"><i class="fas fa-trash"></i></button>
+											</div>
+										</td>
+									</tr>
+									<tr th:if="${#lists.isEmpty(stockAdjustmentList.results)}">
+										<td colspan="5" class="text-center text-muted py-4">No stock adjustments found</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div class="d-flex justify-content-between align-items-center mt-3">
+							<div class="text-muted small" id="saPageInfo">Page <span th:text="${stockAdjustmentList.pageNo + 1}">1</span> of <span th:text="${stockAdjustmentList.totalPage}">1</span></div>
+							<nav><ul id="saPagination" class="pagination pagination-sm"></ul></nav>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div layout:fragment="modals">
+		<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title"><i class="fas fa-exclamation-triangle text-warning me-2"></i>Confirm Delete</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					</div>
+					<div class="modal-body">
+						<p>Are you sure you want to delete <strong id="confirmDeleteName"></strong>?</p>
+						<p class="text-muted small mb-0">This action cannot be undone.</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+						<button type="button" id="confirmDeleteBtn" class="btn btn-danger"><i class="fas fa-trash me-1"></i> Delete</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div layout:fragment="scripts">
+		<script th:src="@{/plugins/jquery/pagination/jquery.twbsPagination.min.js}"></script>
+		<script th:src="@{/js/inventory/stock/goods-receipt-list.js}"></script>
+		<script th:src="@{/js/inventory/stock/goods-issue-list.js}"></script>
+		<script th:src="@{/js/inventory/stock/stock-adjustment-list.js}"></script>
+		<script>
+		$(document).ready(function () {
+			var initialTab = $('#activeTab').val() || 'goods-receipts';
+			var initialTabEl = document.querySelector('#' + initialTab + '-tab');
+			if (initialTabEl) { new bootstrap.Tab(initialTabEl).show(); }
+		});
+		</script>
+	</div>
+</body>
+</html>

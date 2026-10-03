@@ -16,5 +16,6 @@ public class MenuRoleAccessRequest {
     private Boolean canEdit;
     private Boolean canDelete;
     private Boolean isDefault;
+    private Boolean canApprove;
     private Integer permissionPriority;
 }

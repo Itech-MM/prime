@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base-layout}">
+<head>
+<title>License Detail</title>
+</head>
+<body>
+	<div layout:fragment="content">
+
+		<div class="page-header">
+			<h1 class="h3 mb-0 text-gray-800">License Detail</h1>
+			<p class="text-muted mb-0" th:text="${licenseDTO.code}">-</p>
+		</div>
+
+		<div th:if="${licenseDTO == null}" class="alert alert-danger">
+			License not found.</div>
+
+		<div th:if="${licenseDTO != null}">
+			<div class="row">
+				<div class="col-lg-8">
+					<div class="card mb-4">
+						<div class="card-header bg-white py-3">
+							<h6 class="card-title mb-0">
+								<i class="fas fa-certificate me-2 text-primary"></i>License
+								Information
+							</h6>
+						</div>
+						<div class="card-body">
+							<div class="row mb-3">
+								<div class="col-md-6">
+									<p class="mb-1 small text-muted">License Code</p>
+									<p th:text="${licenseDTO.code}">-</p>
+								</div>
+								<div class="col-md-6">
+									<p class="mb-1 small text-muted">Status</p>
+									<p>
+										<span class="badge bg-info" th:text="${licenseDTO.statusDesc}">-</span>
+									</p>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<div class="col-md-6">
+									<p class="mb-1 small text-muted">Customer</p>
+									<p
+										th:text="${licenseDTO.customerName} + ' (' + ${licenseDTO.customerCode} + ')'">-</p>
+								</div>
+								<div class="col-md-6">
+									<p class="mb-1 small text-muted">Product</p>
+									<p
+										th:text="${licenseDTO.productName} + ' (' + ${licenseDTO.productCode} + ')'">-</p>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<div class="col-md-6">
+									<p class="mb-1 small text-muted">Plan</p>
+									<p
+										th:text="${licenseDTO.planName} + ' (' + ${licenseDTO.planCode} + ')'">-</p>
+								</div>
+								<div class="col-md-6">
+									<p class="mb-1 small text-muted">Fingerprint</p>
+									<p th:text="${licenseDTO.fingerprint} ?: 'ANY (unbound)'">-</p>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<div class="col-md-3">
+									<p class="mb-1 small text-muted">Issued At</p>
+									<p th:text="${licenseDTO.issuedAt} ?: '-'">-</p>
+								</div>
+								<div class="col-md-3">
+									<p class="mb-1 small text-muted">Expires At</p>
+									<p th:text="${licenseDTO.expiresAt} ?: '-'">-</p>
+								</div>
+								<div class="col-md-3">
+									<p class="mb-1 small text-muted">Grace Days</p>
+									<p th:text="${licenseDTO.graceDays} ?: '-'">-</p>
+								</div>
+								<div class="col-md-3">
+									<p class="mb-1 small text-muted">Price Paid</p>
+									<p th:text="${licenseDTO.priceDesc} ?: '-'">-</p>
+								</div>
+							</div>
+							<a th:if="${licenseDTO.tokenAvailable}"
+								th:href="@{'/licenses/' + ${licenseDTO.id} + '/token/download'}"
+								class="btn btn-outline-primary btn-sm"> <i
+								class="fas fa-download me-1"></i> Download Token
+							</a>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-lg-4">
+					<div class="card mb-4">
+						<div class="card-header bg-white py-3">
+							<h6 class="card-title mb-0">
+								<i class="fas fa-history me-2 text-primary"></i>Audit Log
+							</h6>
+						</div>
+						<div class="card-body"
+							style="max-height: 400px; overflow-y: auto;">
+							<div th:each="logEntry : ${auditLogs}"
+								class="mb-3 pb-2 border-bottom">
+								<div class="small text-muted" th:text="${logEntry.eventTime}">-</div>
+								<div class="fw-bold" th:text="${logEntry.eventType}">-</div>
+								<div class="small" th:text="${logEntry.details}">-</div>
+							</div>
+							<div th:if="${#lists.isEmpty(auditLogs)}"
+								class="text-muted text-center py-3">No audit history yet</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<a th:href="@{/licenses}" class="btn btn-outline-secondary"> <i
+				class="fas fa-arrow-left me-1"></i> Back to List
+			</a>
+		</div>
+	</div>
+</body>
+</html>

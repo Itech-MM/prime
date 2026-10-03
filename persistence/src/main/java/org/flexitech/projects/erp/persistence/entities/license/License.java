@@ -1,10 +1,11 @@
 package org.flexitech.projects.erp.persistence.entities.license;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import org.flexitech.projects.erp.commons.TableNames;
 import org.flexitech.projects.erp.persistence.BasedEntity;
-import org.flexitech.projects.erp.persistence.entities.customer.Customer;
+import org.flexitech.projects.erp.persistence.entities.customer.CustomerProduct;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,8 +22,8 @@ import lombok.Setter;
 public class License extends BasedEntity {
 
 	@ManyToOne
-	@JoinColumn(name = "customer_id")
-	private Customer customer;
+	@JoinColumn(name = "customer_product_id")
+	private CustomerProduct customerProduct;
 
 	@ManyToOne
 	@JoinColumn(name = "plan_id")
@@ -44,4 +45,10 @@ public class License extends BasedEntity {
 
 	@Column(name = "grace_days")
 	private Integer graceDays;
+
+	@Column(name = "token_location")
+	private String tokenLocation;
+
+	@Column(name = "price_paid")
+	private BigDecimal pricePaid;
 }

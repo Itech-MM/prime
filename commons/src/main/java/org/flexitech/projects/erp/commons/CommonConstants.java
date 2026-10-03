@@ -35,5 +35,6 @@ public class CommonConstants {
 	
 	public static final String QR_ENTITY_TYPE = "content-share-qr";
 	public static final int QR_SIZE = 300;
+	public static final String RSA_2048 = "RSA2048";
 
 }

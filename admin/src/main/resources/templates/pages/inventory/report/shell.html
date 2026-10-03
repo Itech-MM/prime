@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base-layout}">
+<head>
+<title>Inventory Reports</title>
+</head>
+<body>
+	<div layout:fragment="content">
+
+		<input type="hidden" id="activeTab" th:value="${activeTab}">
+
+		<div class="page-header">
+			<h1 class="h3 mb-0 text-gray-800">Inventory Reports</h1>
+			<p class="text-muted mb-0">Current stock levels and movement history</p>
+		</div>
+
+		<div class="card">
+			<div class="card-header bg-white pt-3 pb-0 border-bottom-0">
+				<ul class="nav nav-tabs border-bottom-0" id="reportTabs" role="tablist">
+					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='stock-on-hand', label='Stock On Hand', icon='fas fa-boxes', visible=${viewStockOnHand}, active=${activeTab == 'stock-on-hand'})}"></li>
+					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='stock-card', label='Stock Card', icon='fas fa-receipt', visible=${viewStockCard}, active=${activeTab == 'stock-card'})}"></li>
+				</ul>
+			</div>
+
+			<div class="card-body">
+				<div class="tab-content" id="reportTabContent">
+
+					<div class="tab-pane fade" th:classappend="${activeTab == 'stock-on-hand'} ? ' show active'" id="stock-on-hand" role="tabpanel">
+						<div class="d-flex gap-2 flex-wrap align-items-end mb-3">
+							<div>
+								<label class="form-label small fw-bold">Item</label>
+								<select id="sohItemFilter" class="form-select form-select-sm" style="width:220px"></select>
+							</div>
+							<div>
+								<label class="form-label small fw-bold">Warehouse</label>
+								<select id="sohWarehouseFilter" class="form-select form-select-sm" style="width:200px"></select>
+							</div>
+							<div class="form-check mb-2">
+								<input type="checkbox" id="sohLowStockOnly" class="form-check-input">
+								<label class="form-check-label small" for="sohLowStockOnly">Low stock only</label>
+							</div>
+							<button type="button" id="sohSearchBtn" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+							<button type="button" id="sohResetBtn" class="btn btn-sm btn-outline-secondary"><i class="fas fa-redo"></i></button>
+						</div>
+						<div id="sohLoadingSpinner" class="text-center d-none py-4"><div class="spinner-border text-primary"></div></div>
+						<div class="table-responsive" id="sohTableContainer">
+							<table class="table table-hover table-striped align-middle">
+								<thead class="table-light"><tr><th>Item</th><th>Warehouse</th><th>Location</th><th>Batch</th><th>On Hand</th><th>Reserved</th><th>Available</th><th>Avg Cost</th><th>Last Movement</th></tr></thead>
+								<tbody id="sohTableBody"></tbody>
+							</table>
+						</div>
+						<div class="d-flex justify-content-between align-items-center mt-3">
+							<div class="text-muted small" id="sohPageInfo"></div>
+							<nav><ul id="sohPagination" class="pagination pagination-sm"></ul></nav>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" th:classappend="${activeTab == 'stock-card'} ? ' show active'" id="stock-card" role="tabpanel">
+						<div class="d-flex gap-2 flex-wrap align-items-end mb-3">
+							<div>
+								<label class="form-label small fw-bold">Item <span class="text-danger">*</span></label>
+								<select id="scItemFilter" class="form-select form-select-sm" style="width:220px"></select>
+							</div>
+							<div>
+								<label class="form-label small fw-bold">Location</label>
+								<select id="scLocationFilter" class="form-select form-select-sm" style="width:200px"></select>
+							</div>
+							<div>
+								<label class="form-label small fw-bold">Movement</label>
+								<select id="scMovementFilter" class="form-select form-select-sm" style="width:160px">
+									<option value="">All</option>
+									<option th:each="m : ${movementTypeList}" th:value="${m.code}" th:text="${m.desc}"></option>
+								</select>
+							</div>
+							<div>
+								<label class="form-label small fw-bold">From</label>
+								<input type="date" id="scFromDate" class="form-control form-control-sm">
+							</div>
+							<div>
+								<label class="form-label small fw-bold">To</label>
+								<input type="date" id="scToDate" class="form-control form-control-sm">
+							</div>
+							<button type="button" id="scSearchBtn" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+							<button type="button" id="scResetBtn" class="btn btn-sm btn-outline-secondary"><i class="fas fa-redo"></i></button>
+						</div>
+						<div id="scEmptyPrompt" class="text-center text-muted py-4">Select an item to view its stock card</div>
+						<div id="scLoadingSpinner" class="text-center d-none py-4"><div class="spinner-border text-primary"></div></div>
+						<div class="table-responsive d-none" id="scTableContainer">
+							<table class="table table-hover table-striped align-middle">
+								<thead class="table-light"><tr><th>Date</th><th>Location</th><th>Movement</th><th>In</th><th>Out</th><th>Balance</th><th>Unit Cost</th><th>Ref Doc</th><th>Posted By</th></tr></thead>
+								<tbody id="scTableBody"></tbody>
+							</table>
+						</div>
+						<div class="d-flex justify-content-between align-items-center mt-3 d-none" id="scPagingWrap">
+							<div class="text-muted small" id="scPageInfo"></div>
+							<nav><ul id="scPagination" class="pagination pagination-sm"></ul></nav>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div layout:fragment="scripts">
+		<script th:src="@{/plugins/jquery/pagination/jquery.twbsPagination.min.js}"></script>
+		<script th:src="@{/js/inventory/report/stock-on-hand.js}"></script>
+		<script th:src="@{/js/inventory/report/stock-card.js}"></script>
+		<script>
+		$(document).ready(function () {
+			var initialTab = $('#activeTab').val() || 'stock-on-hand';
+			var initialTabEl = document.querySelector('#' + initialTab + '-tab');
+			if (initialTabEl) { new bootstrap.Tab(initialTabEl).show(); }
+		});
+		</script>
+	</div>
+</body>
+</html>

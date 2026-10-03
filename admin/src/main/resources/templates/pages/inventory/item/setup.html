@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base-layout}">
+<head>
+<title>Inventory Setup</title>
+</head>
+<body>
+	<div layout:fragment="content">
+
+		<input type="hidden" id="activeTab" th:value="${activeTab}">
+		<input type="hidden" id="canEditItem" th:value="${canEditItem}">
+		<input type="hidden" id="canEditCategory" th:value="${canEditCategory}">
+		<input type="hidden" id="canEditBrand" th:value="${canEditBrand}">
+		<input type="hidden" id="canEditUom" th:value="${canEditUom}">
+		<input type="hidden" id="presetCategoryEditId" th:value="${presetCategoryEditId}">
+		<input type="hidden" id="presetBrandEditId" th:value="${presetBrandEditId}">
+		<input type="hidden" id="presetUomEditId" th:value="${presetUomEditId}">
+
+		<div class="page-header d-flex justify-content-between align-items-start">
+			<div>
+				<h1 class="h3 mb-0 text-gray-800">Inventory Setup</h1>
+				<p class="text-muted mb-0">Manage items, categories, brands and units of measure</p>
+			</div>
+			<a th:href="@{/inventory/items}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to List</a>
+		</div>
+
+		<div th:if="${errorMsg != null}" class="alert alert-danger alert-dismissible fade show">
+			<i class="fas fa-exclamation-circle me-2"></i><span th:text="${errorMsg}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		</div>
+
+		<div class="card">
+			<div class="card-header bg-white pt-3 pb-0 border-bottom-0">
+				<ul class="nav nav-tabs border-bottom-0" id="setupTabs" role="tablist">
+					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='items', label='Item', icon='fas fa-box', visible=${viewItem}, active=${activeTab == 'items'})}"></li>
+					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='categories', label='Category', icon='fas fa-sitemap', visible=${viewCategory}, active=${activeTab == 'categories'})}"></li>
+					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='brands', label='Brand', icon='fas fa-tag', visible=${viewBrand}, active=${activeTab == 'brands'})}"></li>
+					<li th:replace="~{layouts/fragments/tab-nav :: tab-item(tabId='units', label='Unit', icon='fas fa-ruler', visible=${viewUom}, active=${activeTab == 'units'})}"></li>
+				</ul>
+			</div>
+
+			<div class="card-body">
+				<div class="tab-content" id="setupTabContent">
+
+					<div class="tab-pane fade" th:classappend="${activeTab == 'items'} ? ' show active'" id="items" role="tabpanel">
+						<form th:action="@{/inventory/items/setup}" th:object="${itemDTO}" method="post" class="needs-validation" id="itemForm">
+							<input type="hidden" th:field="*{id}">
+
+							<div class="card mb-3">
+								<div class="card-header bg-white py-3"><h6 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Basic Information</h6></div>
+								<div class="card-body">
+									<div class="row g-3">
+										<div class="col-md-4">
+											<label class="form-label fw-bold small">Code <span class="text-danger">*</span></label>
+											<input type="text" th:field="*{code}" class="form-control" required>
+											<div class="form-text text-danger small" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+										</div>
+										<div class="col-md-4">
+											<label class="form-label fw-bold small">SKU</label>
+											<input type="text" th:field="*{sku}" class="form-control">
+										</div>
+										<div class="col-md-4">
+											<label class="form-label fw-bold small">Barcode</label>
+											<input type="text" th:field="*{barcode}" class="form-control">
+										</div>
+										<div class="col-md-8">
+											<label class="form-label fw-bold small">Name <span class="text-danger">*</span></label>
+											<input type="text" th:field="*{name}" class="form-control" required>
+											<div class="form-text text-danger small" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+										</div>
+										<div class="col-md-4">
+											<label class="form-label fw-bold small">Status <span class="text-danger">*</span></label>
+											<select th:field="*{status}" class="form-select" required>
+												<option value="">Select Status</option>
+												<option th:each="s : ${statusList}" th:value="${s.code}" th:text="${s.desc}" th:selected="${s.code == itemDTO.status}"></option>
+											</select>
+										</div>
+										<div class="col-12">
+											<label class="form-label fw-bold small">Description</label>
+											<textarea th:field="*{description}" class="form-control" rows="2"></textarea>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="card mb-3">
+								<div class="card-header bg-white py-3"><h6 class="mb-0"><i class="fas fa-layer-group me-2 text-primary"></i>Classification</h6></div>
+								<div class="card-body">
+									<div class="row g-3">
+										<div class="col-md-4">
+											<label class="form-label fw-bold small">Category <span class="text-danger">*</span></label>
+											<div class="select2-with-action">
+												<select th:field="*{categoryId}" id="categoryId" class="form-select" style="width:100%" required></select>
+												<button th:if="${canEditCategory}" type="button" class="btn btn-outline-secondary btn-sm quick-add-btn" id="quickAddCategoryBtn">+ Add</button>
+											</div>
+											<div class="form-text text-danger small" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></div>
+										</div>
+										<div class="col-md-4">
+											<label class="form-label fw-bold small">Brand</label>
+											<div class="select2-with-action">
+												<select th:field="*{brandId}" id="brandId" class="form-select" style="width:100%"></select>
+												<button th:if="${canEditBrand}" type="button" class="btn btn-outline-secondary btn-sm quick-add-btn" id="quickAddBrandBtn">+ Add</button>
+											</div>
+										</div>
+										<div class="col-md-4">
+											<label class="form-label fw-bold small">Base Unit <span class="text-danger">*</span></label>
+											<div class="select2-with-action">
+												<select th:field="*{baseUomId}" id="baseUomId" class="form-select" style="width:100%" required></select>
+												<button th:if="${canEditUom}" type="button" class="btn btn-outline-secondary btn-sm quick-add-btn" id="quickAddUomBtn">+ Add</button>
+											</div>
+											<div class="form-text text-danger small" th:if="${#fields.hasErrors('baseUomId')}" th:errors="*{baseUomId}"></div>
+										</div>
+										<div class="col-md-4">
+											<label class="form-label fw-bold small">Item Type <span class="text-danger">*</span></label>
+											<select th:field="*{itemType}" class="form-select" required>
+												<option value="">Select Type</option>
+												<option th:each="t : ${itemTypeList}" th:value="${t.code}" th:text="${t.desc}" th:selected="${t.code == itemDTO.itemType}"></option>
+											</select>
+										</div>
+										<div class="col-md-4">
+											<label class="form-label fw-bold small">Tracking <span class="text-danger">*</span></label>
+											<select th:field="*{trackingType}" class="form-select" required>
+												<option value="">Select Tracking</option>
+												<option th:each="t : ${trackingTypeList}" th:value="${t.code}" th:text="${t.desc}" th:selected="${t.code == itemDTO.trackingType}"></option>
+											</select>
+											<div class="form-text small text-muted" th:if="${itemDTO.id != null}">Cannot be changed once stock has moved for this item.</div>
+										</div>
+										<div class="col-md-4">
+											<label class="form-label fw-bold small">Costing Method</label>
+											<select th:field="*{costingMethod}" class="form-select">
+												<option value="">Select Method</option>
+												<option th:each="c : ${costingMethodList}" th:value="${c.code}" th:text="${c.desc}" th:selected="${c.code == itemDTO.costingMethod}"></option>
+											</select>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="card mb-3">
+								<div class="card-header bg-white py-3"><h6 class="mb-0"><i class="fas fa-coins me-2 text-primary"></i>Pricing & Stock Levels</h6></div>
+								<div class="card-body">
+									<div class="row g-3">
+										<div class="col-md-3">
+											<label class="form-label fw-bold small">Standard Cost</label>
+											<input type="number" step="0.0001" th:field="*{standardCost}" class="form-control">
+										</div>
+										<div class="col-md-3">
+											<label class="form-label fw-bold small">Sale Price</label>
+											<input type="number" step="0.0001" th:field="*{salePrice}" class="form-control">
+										</div>
+										<div class="col-md-3">
+											<label class="form-label fw-bold small">Tax Rate (%)</label>
+											<input type="number" step="0.01" th:field="*{taxRate}" class="form-control">
+										</div>
+										<div class="col-md-3">
+											<label class="form-label fw-bold small">Reorder Level</label>
+											<input type="number" step="0.0001" th:field="*{reorderLevel}" class="form-control">
+										</div>
+										<div class="col-md-3">
+											<label class="form-label fw-bold small">Reorder Qty</label>
+											<input type="number" step="0.0001" th:field="*{reorderQty}" class="form-control">
+										</div>
+										<div class="col-md-3">
+											<label class="form-label fw-bold small">Min Qty</label>
+											<input type="number" step="0.0001" th:field="*{minQty}" class="form-control">
+										</div>
+										<div class="col-md-3">
+											<label class="form-label fw-bold small">Max Qty</label>
+											<input type="number" step="0.0001" th:field="*{maxQty}" class="form-control">
+										</div>
+										<div class="col-md-3 d-flex align-items-end">
+											<div class="form-check">
+												<input type="checkbox" th:field="*{hasExpiry}" class="form-check-input" id="hasExpiry">
+												<label class="form-check-label small fw-bold" for="hasExpiry">Has Expiry</label>
+											</div>
+										</div>
+										<div class="col-md-3" id="shelfLifeWrap">
+											<label class="form-label fw-bold small">Shelf Life (days)</label>
+											<input type="number" th:field="*{shelfLifeDays}" class="form-control">
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="d-flex justify-content-end gap-2 mb-2">
+								<a th:href="@{/inventory/items}" class="btn btn-outline-secondary"><i class="fas fa-times me-1"></i> Cancel</a>
+								<button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>
+									<span th:text="${itemDTO.id != null} ? 'Update Item' : 'Create Item'">Save</span>
+								</button>
+							</div>
+						</form>
+					</div>
+
+					<div class="tab-pane fade" th:classappend="${activeTab == 'categories'} ? ' show active'" id="categories" role="tabpanel">
+						<div class="row">
+							<div class="col-md-6">
+								<form id="categoryTabForm" class="needs-validation" novalidate th:attr="data-ajax-url=@{/inventory/item-categories/save}">
+									<input type="hidden" id="categoryTabId" data-field="id" data-type="number">
+									<div class="mb-3">
+										<label class="form-label fw-bold small">Code <span class="text-danger">*</span></label>
+										<input type="text" id="categoryTabCode" data-field="code" class="form-control" maxlength="30" required>
+										<div class="invalid-feedback d-block text-danger small" data-field-error="code"></div>
+									</div>
+									<div class="mb-3">
+										<label class="form-label fw-bold small">Name <span class="text-danger">*</span></label>
+										<input type="text" id="categoryTabName" data-field="name" class="form-control" required>
+										<div class="invalid-feedback d-block text-danger small" data-field-error="name"></div>
+									</div>
+									<div class="mb-3">
+										<label class="form-label fw-bold small">Parent Category</label>
+										<select id="categoryTabParentId" data-field="parentId" class="form-select" style="width:100%"></select>
+										<div class="invalid-feedback d-block text-danger small" data-field-error="parentId"></div>
+									</div>
+									<div class="mb-3">
+										<label class="form-label fw-bold small">Status <span class="text-danger">*</span></label>
+										<select id="categoryTabStatus" data-field="status" data-type="number" class="form-select" required></select>
+										<div class="invalid-feedback d-block text-danger small" data-field-error="status"></div>
+									</div>
+									<div class="d-flex gap-2">
+										<button type="button" id="categoryTabClearBtn" class="btn btn-outline-secondary"><i class="fas fa-eraser me-1"></i> Clear</button>
+										<button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Category</button>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" th:classappend="${activeTab == 'brands'} ? ' show active'" id="brands" role="tabpanel">
+						<div class="row">
+							<div class="col-md-6">
+								<form id="brandTabForm" class="needs-validation" novalidate th:attr="data-ajax-url=@{/inventory/brands/save}">
+									<input type="hidden" id="brandTabId" data-field="id" data-type="number">
+									<div class="mb-3">
+										<label class="form-label fw-bold small">Code <span class="text-danger">*</span></label>
+										<input type="text" id="brandTabCode" data-field="code" class="form-control" maxlength="30" required>
+										<div class="invalid-feedback d-block text-danger small" data-field-error="code"></div>
+									</div>
+									<div class="mb-3">
+										<label class="form-label fw-bold small">Name <span class="text-danger">*</span></label>
+										<input type="text" id="brandTabName" data-field="name" class="form-control" required>
+										<div class="invalid-feedback d-block text-danger small" data-field-error="name"></div>
+									</div>
+									<div class="mb-3">
+										<label class="form-label fw-bold small">Status <span class="text-danger">*</span></label>
+										<select id="brandTabStatus" data-field="status" data-type="number" class="form-select" required></select>
+										<div class="invalid-feedback d-block text-danger small" data-field-error="status"></div>
+									</div>
+									<div class="d-flex gap-2">
+										<button type="button" id="brandTabClearBtn" class="btn btn-outline-secondary"><i class="fas fa-eraser me-1"></i> Clear</button>
+										<button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Brand</button>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" th:classappend="${activeTab == 'units'} ? ' show active'" id="units" role="tabpanel">
+						<div class="row">
+							<div class="col-md-6">
+								<form id="uomTabForm" class="needs-validation" novalidate th:attr="data-ajax-url=@{/inventory/units/save}">
+									<input type="hidden" id="uomTabId" data-field="id" data-type="number">
+									<div class="mb-3">
+										<label class="form-label fw-bold small">Code <span class="text-danger">*</span></label>
+										<input type="text" id="uomTabCode" data-field="code" class="form-control" maxlength="20" placeholder="e.g. PCS, KG, BOX" required>
+										<div class="invalid-feedback d-block text-danger small" data-field-error="code"></div>
+									</div>
+									<div class="mb-3">
+										<label class="form-label fw-bold small">Name <span class="text-danger">*</span></label>
+										<input type="text" id="uomTabName" data-field="name" class="form-control" required>
+										<div class="invalid-feedback d-block text-danger small" data-field-error="name"></div>
+									</div>
+									<div class="mb-3">
+										<label class="form-label fw-bold small">Status <span class="text-danger">*</span></label>
+										<select id="uomTabStatus" data-field="status" data-type="number" class="form-select" required></select>
+										<div class="invalid-feedback d-block text-danger small" data-field-error="status"></div>
+									</div>
+									<div class="d-flex gap-2">
+										<button type="button" id="uomTabClearBtn" class="btn btn-outline-secondary"><i class="fas fa-eraser me-1"></i> Clear</button>
+										<button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Unit</button>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div layout:fragment="scripts">
+		<script th:inline="javascript">
+			var PRESET_CATEGORY = /*[[${itemDTO.categoryId}]]*/ null;
+			var PRESET_CATEGORY_NAME = /*[[${itemDTO.categoryName}]]*/ null;
+			var PRESET_BRAND = /*[[${itemDTO.brandId}]]*/ null;
+			var PRESET_BRAND_NAME = /*[[${itemDTO.brandName}]]*/ null;
+			var PRESET_UOM = /*[[${itemDTO.baseUomId}]]*/ null;
+			var PRESET_UOM_NAME = /*[[${itemDTO.baseUomCode}]]*/ null;
+		</script>
+		<script th:src="@{/js/common/ajax-form-submit.js}"></script>
+		<script th:src="@{/js/inventory/item/setup.js}"></script>
+	</div>
+</body>
+</html>

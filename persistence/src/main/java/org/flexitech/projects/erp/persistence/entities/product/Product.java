@@ -1,15 +1,12 @@
 package org.flexitech.projects.erp.persistence.entities.product;
 
 import java.util.Date;
-import java.util.List;
 
 import org.flexitech.projects.erp.commons.TableNames;
 import org.flexitech.projects.erp.persistence.BasedEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,13 +27,11 @@ public class Product extends BasedEntity {
 	@Column(name = "key_algorithm")
 	private String keyAlgorithm;
 
-	@Lob
-	@Column(name = "private_key_enc")
-	private String privateKeyEnc;
+	@Column(name = "private_key_location")
+	private String privateKeyLocation;
 
-	@Lob
-	@Column(name = "public_key")
-	private String publicKey;
+	@Column(name = "public_key_location")
+	private String publicKeyLocation;
 
 	@Column(name = "key_generated_at")
 	private Date keyGeneratedAt;
@@ -44,6 +39,4 @@ public class Product extends BasedEntity {
 	@Column(name = "key_status")
 	private Integer keyStatus;
 
-	@OneToMany(mappedBy = "product")
-	private List<ProductFeature> features;
 }

@@ -152,7 +152,7 @@
 		<profile>
 			<id>uat</id>
 			<properties>
-				<war.file.name>ecommerce-admin</war.file.name>
+				<war.file.name>prime</war.file.name>
 				<website.file.name>ecommerce</website.file.name>
 				<spring.profiles.active>uat</spring.profiles.active>
 			</properties>
@@ -161,7 +161,7 @@
 		<profile>
 			<id>live</id>
 			<properties>
-				<war.file.name>ecommerce-admin</war.file.name>
+				<war.file.name>prime</war.file.name>
 				<website.file.name>ecommerce</website.file.name>
 				<spring.profiles.active>live</spring.profiles.active>
 			</properties>

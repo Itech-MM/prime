@@ -24,7 +24,7 @@ public interface MenuRoleAccessRepository extends JpaRepository<MenuRoleAccess, 
 	List<MenuRoleAccess> findByRoleIdWithMenu(@Param("roleId") Long roleId);
 
 	@Query("SELECT DISTINCT mra.menu.id FROM MenuRoleAccess mra " + "WHERE mra.role.id IN :roleIds "
-			+ "AND mra.canView = true " + "AND mra.menu.status = 1")
+			+ "AND mra.canView = true " + "AND mra.menu.status = 1 AND mra.menu.displayStatus = 1")
 	List<Long> findAccessibleMenuIdsByRoleIds(@Param("roleIds") List<Long> roleIds);
 
 	@Query("SELECT mra FROM MenuRoleAccess mra " + "WHERE mra.role.id = :roleId " + "AND mra.menu.id = :menuId "

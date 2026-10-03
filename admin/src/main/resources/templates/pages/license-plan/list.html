@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base-layout}">
+<head>
+    <title>License Plan List</title>
+</head>
+<body>
+    <div layout:fragment="content">
+
+        <th:block
+            th:with="canEdit=${@menuSecurity.checkMenuEdit('LICENSE_PLAN_LIST')}">
+            <input type="hidden" id="canEdit" th:value="${canEdit}">
+        </th:block>
+
+        <div class="page-header">
+            <h1 class="h3 mb-0 text-gray-800">License Plan Management</h1>
+            <p class="text-muted mb-0">Search and manage license plans</p>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-search me-2 text-primary"></i>Search License Plans
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="searchForm" th:object="${searchDTO}">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="name" class="form-label fw-bold small text-dark">Name</label>
+                            <input type="text" th:field="*{name}" class="form-control" id="name" placeholder="Enter plan name">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="code" class="form-label fw-bold small text-dark">Code</label>
+                            <input type="text" th:field="*{code}" class="form-control" id="code" placeholder="Enter plan code">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="productId" class="form-label fw-bold small text-dark">Product</label>
+                            <select class="form-select" id="productId" style="width: 100%;"></select>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="button" id="searchBtn" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i> Search
+                                </button>
+                                <button type="button" id="resetBtn" class="btn btn-outline-secondary">
+                                    <i class="fas fa-redo me-1"></i> Reset
+                                </button>
+                                <a th:if="${@menuSecurity.checkMenuEdit('LICENSE_PLAN_LIST')}"
+                                   th:href="@{/license-plans/setup}" class="btn btn-success ms-auto">
+                                    <i class="fas fa-plus me-1"></i> Add New Plan
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-layer-group me-2 text-primary"></i>Plan List
+                </h6>
+                <div class="text-muted small" id="resultCount">
+                    Showing <span id="resultShowing">0</span> of <span id="resultTotal">0</span> plans
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="loadingSpinner" class="text-center d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading plans...</p>
+                </div>
+
+                <div class="table-responsive" id="tableContainer">
+                    <table class="table table-hover table-striped" id="plansTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>Product</th>
+                                <th>Duration (days)</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plansTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted small" id="pageInfo">
+                        Page <span id="currentPageLabel">1</span> of <span id="totalPageLabel">1</span>
+                    </div>
+                    <nav>
+                        <ul id="pagination" class="pagination pagination-sm"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div layout:fragment="scripts">
+        <script th:src="@{/plugins/jquery/pagination/jquery.twbsPagination.min.js}"></script>
+
+        <script>
+            let canEdit = $('#canEdit').val() === 'true';
+            let currentPage = 0;
+            let totalPages = 1;
+            const pageSize = 10;
+            let isLoading = false;
+            let currentRequest = null;
+
+            $(document).ready(function() {
+                $('#productId').select2({
+                    width: '100%',
+                    placeholder: 'Filter by product',
+                    allowClear: true,
+                    ajax: {
+                        url: CONTEXT_PATH + 'license-plans/products/select2',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return { q: params.term, page: params.page || 0 };
+                        },
+                        processResults: function(data) {
+                            return data;
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 0
+                });
+
+                searchPlans(0);
+
+                $('#searchBtn').click(function() {
+                    searchPlans(0);
+                });
+
+                $('#resetBtn').click(function() {
+                    $('#searchForm')[0].reset();
+                    $('#productId').val(null).trigger('change');
+                    searchPlans(0);
+                });
+
+                $('#searchForm input').keypress(function(e) {
+                    if (e.which === 13) {
+                        e.preventDefault();
+                        searchPlans(0);
+                    }
+                });
+
+                $(document).on('click', '.edit-btn', function() {
+                    editPlan($(this).data('id'));
+                });
+            });
+
+            function initPagination(currentPage, totalPages) {
+                $('#pagination').twbsPagination('destroy');
+                $('#pagination').twbsPagination({
+                    totalPages: Math.max(totalPages, 1),
+                    visiblePages: 5,
+                    startPage: currentPage + 1,
+                    first: 'First',
+                    prev: 'Previous',
+                    next: 'Next',
+                    last: 'Last',
+                    onPageClick: function (event, page) {
+                        if (!isLoading) {
+                            searchPlans(page - 1);
+                        }
+                    }
+                });
+            }
+
+            function searchPlans(page) {
+                if (isLoading) {
+                    return;
+                }
+
+                if (currentRequest) {
+                    currentRequest.abort();
+                }
+
+                showLoading(true);
+                isLoading = true;
+
+                const searchData = {
+                    name: $('#name').val(),
+                    code: $('#code').val(),
+                    productId: $('#productId').val() || null,
+                    page: page,
+                    size: pageSize
+                };
+
+                currentRequest = $.ajax({
+                    url: CONTEXT_PATH + 'license-plans/search',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(searchData),
+                    success: function(response) {
+                        updateTable(response.results);
+                        currentPage = response.pageNo;
+                        totalPages = response.totalPage;
+                        initPagination(currentPage, totalPages);
+                        $('#resultShowing').text(response.pageCount);
+                        $('#resultTotal').text(response.totalRecords);
+                        $('#currentPageLabel').text(currentPage + 1);
+                        $('#totalPageLabel').text(totalPages);
+                        showLoading(false);
+                        isLoading = false;
+                        currentRequest = null;
+                    },
+                    error: function(xhr, status, error) {
+                        showLoading(false);
+                        isLoading = false;
+                        currentRequest = null;
+
+                        if (status !== 'abort') {
+                            showError('Error searching plans: ' + (xhr.responseJSON?.message || error));
+                        }
+                    }
+                });
+            }
+
+            function updateTable(plans) {
+                const tbody = $('#plansTableBody');
+                tbody.empty();
+
+                if (plans && plans.length > 0) {
+                    plans.forEach(function(plan) {
+                        const statusBadge = plan.status === 1 ?
+                            '<span class="badge bg-success">Active</span>' :
+                            plan.status === 0 ?
+                            '<span class="badge bg-secondary">Inactive</span>' :
+                            '<span class="text-muted">-</span>';
+
+                        let actionButtons = '<span class="text-muted">No actions</span>';
+                        if (canEdit) {
+                            actionButtons = `<button class="btn btn-outline-primary btn-sm" onclick="editPlan(${plan.id})"><i class="fas fa-edit"></i></button>`;
+                        }
+
+                        const row = `
+                            <tr>
+                                <td>${plan.name || '-'}</td>
+                                <td>${plan.code || '-'}</td>
+                                <td>${plan.productName || '-'}</td>
+                                <td>${plan.durationDays || '-'}</td>
+                                <td>${plan.priceDesc || '-'}</td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        ${actionButtons}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                } else {
+                    tbody.append(`
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-layer-group fa-2x mb-2 d-block"></i>
+                                No plans found
+                            </td>
+                        </tr>
+                    `);
+                }
+            }
+
+            function showLoading(show) {
+                if (show) {
+                    $('#loadingSpinner').removeClass('d-none');
+                    $('#tableContainer').addClass('d-none');
+                } else {
+                    $('#loadingSpinner').addClass('d-none');
+                    $('#tableContainer').removeClass('d-none');
+                }
+            }
+
+            function showError(message) {
+                showToast(message, 'error')
+            }
+
+            function editPlan(planId) {
+                window.location.href = CONTEXT_PATH + 'license-plans/setup?id=' + planId;
+            }
+
+            window.editPlan = editPlan;
+        </script>
+    </div>
+</body>
+</html>

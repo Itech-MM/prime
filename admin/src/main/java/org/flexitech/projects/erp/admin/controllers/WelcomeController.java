@@ -15,7 +15,7 @@ public class WelcomeController {
 	@PreAuthorize("@menuSecurity.hasMenuAccess('"+MenuCodeConstants.MENU_DASHBOARD+"') or @menuSecurity.hasMenuView('"+MenuCodeConstants.MENU_DASHBOARD+"')")
 	public String dashboard() {
 		log.debug("continue to dashboard");
-		return "pages/dashboard/index";
+		return "pages/dashboard/dashboard";
 	}
 
 }

@@ -1,310 +1,411 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login | PRIME</title>
-<link rel="stylesheet" th:href="@{/plugins/bootstrap/css/bootstrap.min.css}">
+<title th:text="#{login.title}">Login | PRIME</title>
+<link rel="stylesheet"
+	th:href="@{/plugins/bootstrap/css/bootstrap.min.css}">
 <link rel="stylesheet" th:href="@{/plugins/fontawesome/css/all.min.css}">
 <link rel="stylesheet" th:href="@{/css/root.css}">
-<link rel="icon" th:href="@{/images/logo/ecommerce-logo.ico}" type="image/x-icon">
+<link rel="icon" th:href="@{/images/logo/logo.ico}" type="image/x-icon">
 
 <style>
-	body.login-page {
-		background: linear-gradient(135deg, #eef3f9, #faf6e9, #f2f4f7);
-		min-height: 100vh;
-	}
+body.login-page {
+	background: linear-gradient(135deg, #eef3f9, #faf6e9, #f2f4f7);
+	min-height: 100vh;
+}
 
-	.login-shell {
-		min-height: 100vh;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 2rem 1rem;
-	}
 
-	.login-panel {
-		width: 100%;
-		max-width: 960px;
-		background: #ffffff;
-		border-radius: 1.25rem;
-		box-shadow: 0 20px 50px rgba(30, 58, 95, 0.15);
-		overflow: hidden;
-		display: flex;
-		min-height: 560px;
-	}
+.brand-soon-badge {
+	margin-left: auto;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	font-size: 0.65rem;
+	font-weight: 700;
+	letter-spacing: 0.3px;
+	white-space: nowrap;
+	color: #e2c25a;
+	background: rgba(201, 162, 39, 0.16);
+	border: 1px solid rgba(201, 162, 39, 0.4);
+}
 
-	.login-brand-side {
-		flex: 1;
-		background: linear-gradient(160deg, #1e3a5f 0%, #16304f 60%, #0f2338 100%);
-		color: #ffffff;
-		padding: 3rem 2.5rem;
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		position: relative;
-		overflow: hidden;
-	}
+.brand-tagline-list li.is-soon {
+	color: rgba(255, 255, 255, 0.65);
+}
 
-	.login-brand-side::before {
-		content: "";
-		position: absolute;
-		width: 320px;
-		height: 320px;
-		border-radius: 50%;
-		background: rgba(201, 162, 39, 0.12);
-		top: -120px;
-		right: -100px;
-	}
+.brand-tagline-list li.is-soon>i {
+	color: rgba(201, 162, 39, 0.75);
+}
 
-	.login-brand-side::after {
-		content: "";
-		position: absolute;
-		width: 220px;
-		height: 220px;
-		border-radius: 50%;
-		background: rgba(201, 162, 39, 0.08);
-		bottom: -80px;
-		left: -60px;
-	}
+html[lang="my"] body {
+	font-family: 'Inter', 'Myanmar Text', 'Noto Sans Myanmar', 'Padauk',
+		sans-serif;
+}
 
-	.brand-side-icon {
-		width: 52px;
-		height: 52px;
-		border-radius: 12px;
-		background: rgba(255, 255, 255, 0.1);
-		border: 1px solid rgba(255, 255, 255, 0.15);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 1.4rem;
-		color: #c9a227;
-		margin-bottom: 1.5rem;
-		position: relative;
-		z-index: 1;
-	}
+.login-shell {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem 1rem;
+}
 
-	.brand-side-title {
-		font-size: 2rem;
-		font-weight: 800;
-		letter-spacing: -0.5px;
-		margin-bottom: 0.75rem;
-		position: relative;
-		z-index: 1;
-	}
+.login-panel {
+	width: 100%;
+	max-width: 960px;
+	background: #ffffff;
+	border-radius: 1.25rem;
+	box-shadow: 0 20px 50px rgba(30, 58, 95, 0.15);
+	display: flex;
+	min-height: 560px;
+	position: relative;
+}
 
-	.brand-side-title .brand-highlight {
-		color: #c9a227;
-	}
+.login-brand-side {
+	border-radius: 1.25rem 0 0 1.25rem;
+}
 
-	.brand-side-subtitle {
-		font-size: 0.95rem;
-		color: rgba(255, 255, 255, 0.7);
-		line-height: 1.6;
-		max-width: 320px;
-		position: relative;
-		z-index: 1;
-	}
+.login-form-side {
+	border-radius: 0 1.25rem 1.25rem 0;
+}
 
-	.brand-side-footer {
-		font-size: 0.78rem;
-		color: rgba(255, 255, 255, 0.45);
-		position: relative;
-		z-index: 1;
-	}
+.login-lang {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	z-index: 10;
+}
 
-	.brand-tagline-list {
-		list-style: none;
-		padding: 0;
-		margin: 2rem 0 0 0;
-		position: relative;
-		z-index: 1;
-	}
+.login-lang .header-lang-btn {
+	background: #ffffff;
+	border: 1px solid var(--border-color);
+}
 
-	.brand-tagline-list li {
-		display: flex;
-		align-items: center;
-		gap: 0.65rem;
-		font-size: 0.85rem;
-		color: rgba(255, 255, 255, 0.8);
-		margin-bottom: 0.85rem;
-	}
+.login-brand-side {
+	flex: 1;
+	background: linear-gradient(160deg, #1e3a5f 0%, #16304f 60%, #0f2338 100%);
+	color: #ffffff;
+	padding: 3rem 2.5rem;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	position: relative;
+	overflow: hidden;
+}
 
-	.brand-tagline-list i {
-		color: #c9a227;
-		font-size: 0.9rem;
-	}
+.login-brand-side::before {
+	content: "";
+	position: absolute;
+	width: 320px;
+	height: 320px;
+	border-radius: 50%;
+	background: rgba(201, 162, 39, 0.12);
+	top: -120px;
+	right: -100px;
+}
 
-	.login-form-side {
-		flex: 1;
-		padding: 3rem 3rem;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-	}
+.login-brand-side::after {
+	content: "";
+	position: absolute;
+	width: 220px;
+	height: 220px;
+	border-radius: 50%;
+	background: rgba(201, 162, 39, 0.08);
+	bottom: -80px;
+	left: -60px;
+}
 
-	.login-form-header {
-		margin-bottom: 2rem;
-	}
+.brand-side-icon {
+	width: 52px;
+	height: 52px;
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.1);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.4rem;
+	color: #c9a227;
+	margin-bottom: 1.5rem;
+	position: relative;
+	z-index: 1;
+}
 
-	.login-form-header h4 {
-		font-weight: 700;
-		color: #1a202c;
-		margin-bottom: 0.4rem;
-	}
+.brand-side-title {
+	font-size: 2rem;
+	font-weight: 800;
+	letter-spacing: -0.5px;
+	margin-bottom: 0.75rem;
+	position: relative;
+	z-index: 1;
+}
 
-	.login-form-header p {
-		color: #718096;
-		font-size: 0.88rem;
-		margin-bottom: 0;
-	}
+.brand-side-title .brand-highlight {
+	color: #c9a227;
+}
 
-	.login-form-side .form-label {
-		font-weight: 600;
-		color: #4a5568;
-		font-size: 0.85rem;
-	}
+.brand-side-subtitle {
+	font-size: 0.95rem;
+	color: rgba(255, 255, 255, 0.7);
+	line-height: 1.6;
+	max-width: 320px;
+	position: relative;
+	z-index: 1;
+}
 
-	.login-form-side .input-group-text {
-		background-color: #f7fafc;
-		border-right: none;
-	}
+.brand-side-footer {
+	font-size: 0.78rem;
+	color: rgba(255, 255, 255, 0.45);
+	position: relative;
+	z-index: 1;
+}
 
-	.login-form-side .form-control {
-		border-left: none;
-	}
+.brand-tagline-list {
+	list-style: none;
+	padding: 0;
+	margin: 2rem 0 0 0;
+	position: relative;
+	z-index: 1;
+}
 
-	.login-form-side .form-control:focus {
-		box-shadow: none;
-		border-color: var(--border-color);
-	}
+.brand-tagline-list li {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	font-size: 0.85rem;
+	color: rgba(255, 255, 255, 0.8);
+	margin-bottom: 0.85rem;
+}
 
-	.login-form-side .input-group:focus-within .input-group-text,
+.brand-tagline-list i {
+	color: #c9a227;
+	font-size: 0.9rem;
+}
+
+.login-form-side {
+	flex: 1;
+	padding: 3rem 3rem;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.login-form-header {
+	margin-bottom: 2rem;
+}
+
+.login-form-header h4 {
+	font-weight: 700;
+	color: #1a202c;
+	margin-bottom: 0.4rem;
+}
+
+.login-form-header p {
+	color: #718096;
+	font-size: 0.88rem;
+	margin-bottom: 0;
+}
+
+.login-form-side .form-label {
+	font-weight: 600;
+	color: #4a5568;
+	font-size: 0.85rem;
+}
+
+.login-form-side .input-group-text {
+	background-color: #f7fafc;
+	border-right: none;
+}
+
+.login-form-side .form-control {
+	border-left: none;
+}
+
+.login-form-side .form-control:focus {
+	box-shadow: none;
+	border-color: var(--border-color);
+}
+
+.login-form-side .input-group:focus-within .input-group-text,
 	.login-form-side .input-group:focus-within .form-control {
-		border-color: var(--primary-color);
-	}
+	border-color: var(--primary-color);
+}
 
-	.btn-prime {
-		background: linear-gradient(135deg, #1e3a5f, #16304f);
-		border: none;
-		color: #ffffff;
-		font-weight: 600;
-		letter-spacing: 0.3px;
-	}
+.btn-prime {
+	background: linear-gradient(135deg, #1e3a5f, #16304f);
+	border: none;
+	color: #ffffff;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+}
 
-	.btn-prime:hover {
-		background: linear-gradient(135deg, #16304f, #0f2338);
-		color: #ffffff;
-	}
+.btn-prime:hover {
+	background: linear-gradient(135deg, #16304f, #0f2338);
+	color: #ffffff;
+}
 
-	.forgot-link {
-		color: var(--primary-color);
-		font-weight: 500;
-	}
+.forgot-link {
+	color: var(--primary-color);
+	font-weight: 500;
+}
 
-	@media (max-width: 767px) {
-		.login-panel {
-			flex-direction: column;
-			min-height: auto;
-		}
-		.login-brand-side {
-			padding: 2.25rem 2rem;
-		}
-		.brand-tagline-list {
-			display: none;
-		}
-		.login-form-side {
-			padding: 2.25rem 2rem;
-		}
+@media ( max-width : 767px) {
+	.login-panel {
+		flex-direction: column;
+		min-height: auto;
 	}
+	.login-brand-side {
+		padding: 2.25rem 2rem;
+	}
+	.brand-tagline-list {
+		display: none;
+	}
+	.login-form-side {
+		padding: 2.25rem 2rem;
+	}
+}
 </style>
 </head>
 <body class="login-page">
 
+
+
 	<div class="login-shell">
 		<div class="login-panel">
+
+			<div class="login-lang">
+				<div class="dropdown">
+					<button class="header-lang-btn position-relative" type="button" id="languageDropdown"
+						data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+						<img class="lang-flag-img"
+							th:src="@{${#locale.language == 'my' ? '/images/icon/mm.png' : '/images/icon/gb.png'}}"
+							th:alt="${#locale.language == 'my' ? 'Myanmar' : 'English'}">
+						<i class="fas fa-chevron-down user-caret"></i>
+					</button>
+					<ul
+						class="dropdown-menu dropdown-menu-end modern-dropdown-menu p-0"
+						aria-labelledby="languageDropdown">
+						<li><a class="dropdown-item dropdown-item-modern lang-item"
+							th:classappend="${#locale.language == 'en' ? 'active' : ''}"
+							href="?lang=en"> <img class="lang-flag-img"
+								th:src="@{/images/icon/gb.png}" alt="English"> <span
+								class="flex-grow-1">English</span> <i
+								class="fas fa-check lang-check"></i>
+						</a></li>
+						<li><a class="dropdown-item dropdown-item-modern lang-item"
+							th:classappend="${#locale.language == 'my' ? 'active' : ''}"
+							href="?lang=my"> <img class="lang-flag-img"
+								th:src="@{/images/icon/mm.png}" alt="Myanmar"> <span
+								class="flex-grow-1">မြန်မာ</span> <i
+								class="fas fa-check lang-check"></i>
+						</a></li>
+					</ul>
+				</div>
+			</div>
 
 			<div class="login-brand-side">
 				<div>
 					<div class="brand-side-icon">
-						<i class="fas fa-cube"></i>
+						<img alt="PRIME" th:src="@{/images/logo/logo.png}" width="46">
 					</div>
-					<div class="brand-side-title"><span class="brand-highlight">P</span>RIME</div>
-					<div class="brand-side-subtitle">
-						Process, Resource &amp; Insight Management Engine
+					<div class="brand-side-title">
+						<span class="brand-highlight">P</span>RIME
 					</div>
+					<div class="brand-side-subtitle" th:text="#{login.brand.subtitle}">
+						Process, Resource &amp; Insight Management Engine</div>
 					<ul class="brand-tagline-list">
-						<li><i class="fas fa-check-circle"></i> Unified operations control</li>
-						<li><i class="fas fa-check-circle"></i> Real-time resource insights</li>
-						<li><i class="fas fa-check-circle"></i> Secure, role-based access</li>
+						<li><i class="fas fa-check-circle"></i> <span
+							th:text="#{login.feature.license}">License, product &amp;
+								customer management</span></li>
+						<li><i class="fas fa-check-circle"></i> <span
+							th:text="#{login.feature.security}">Secure, role-based
+								access</span></li>
+						<li><i class="fas fa-boxes"></i> <span
+							th:text="#{login.feature.inventory}">Inventory &amp; stock
+								management</span></li>
+						<li><i class="fas fa-chart-line"></i> <span
+							th:text="#{login.feature.stock.insight}">Real-time stock
+								insights</span></li>
 					</ul>
 				</div>
-				<div class="brand-side-footer">
-					&copy; <span th:text="${#dates.year(#dates.createNow())}"></span> Flexitech. All rights reserved.
-				</div>
+				<div class="brand-side-footer"
+					th:text="#{login.footer(${#dates.format(#dates.createNow(), 'yyyy')})}">
+					&copy; 2026 Flexitech. All rights reserved.</div>
 			</div>
 
 			<div class="login-form-side">
 				<div class="login-form-header">
-					<h4>Welcome back</h4>
-					<p>Sign in to your PRIME account to continue</p>
+					<h4 th:text="#{login.welcome}">Welcome back</h4>
+					<p th:text="#{login.welcome.sub}">Sign in to your PRIME account
+						to continue</p>
 				</div>
 
 				<div th:if="${param.error}"
 					class="alert alert-danger alert-dismissible fade show rounded-1 small py-2"
 					role="alert">
 					<div class="d-flex align-items-center">
-						<i class="fas fa-exclamation-circle me-2"></i>
-						<span>Invalid phone number or password.</span>
+						<i class="fas fa-exclamation-circle me-2"></i> <span
+							th:text="#{login.error.invalid}">Invalid phone number or
+							password.</span>
 					</div>
-					<button type="button" class="btn-close p-1" data-bs-dismiss="alert" aria-label="Close"></button>
+					<button type="button" class="btn-close p-1" data-bs-dismiss="alert"
+						aria-label="Close"></button>
 				</div>
 
 				<div th:if="${param.logout}"
 					class="alert alert-success alert-dismissible fade show rounded-1 small py-2"
 					role="alert">
 					<div class="d-flex align-items-center">
-						<i class="fas fa-check-circle me-2"></i>
-						<span>You have been logged out successfully.</span>
+						<i class="fas fa-check-circle me-2"></i> <span
+							th:text="#{login.logout.success}">You have been logged out
+							successfully.</span>
 					</div>
-					<button type="button" class="btn-close p-1" data-bs-dismiss="alert" aria-label="Close"></button>
+					<button type="button" class="btn-close p-1" data-bs-dismiss="alert"
+						aria-label="Close"></button>
 				</div>
 
 				<form th:action="@{/login}" method="post">
 					<div class="form-group mb-3">
-						<label for="phoneNumber" class="form-label">Phone Number</label>
+						<label for="phoneNumber" class="form-label"
+							th:text="#{login.phone}">Phone Number</label>
 						<div class="input-group">
-							<span class="input-group-text">
-								<i class="fas fa-mobile-alt text-muted small"></i>
-							</span>
-							<input type="text" id="phoneNumber" name="phoneNumber"
-								class="form-control" placeholder="Enter phone number"
+							<span class="input-group-text"> <i
+								class="fas fa-mobile-alt text-muted small"></i>
+							</span> <input type="text" id="phoneNumber" name="phoneNumber"
+								class="form-control" th:placeholder="#{login.phone.placeholder}"
 								required autofocus autocomplete="off">
 						</div>
 					</div>
 
 					<div class="form-group mb-3">
-						<label for="password" class="form-label">Password</label>
+						<label for="password" class="form-label"
+							th:text="#{login.password}">Password</label>
 						<div class="input-group">
-							<span class="input-group-text">
-								<i class="fas fa-lock text-muted small"></i>
-							</span>
-							<input type="password" id="password" name="password"
-								class="form-control" placeholder="Enter password"
-								required autocomplete="off">
+							<span class="input-group-text"> <i
+								class="fas fa-lock text-muted small"></i>
+							</span> <input type="password" id="password" name="password"
+								class="form-control"
+								th:placeholder="#{login.password.placeholder}" required
+								autocomplete="off">
 						</div>
 					</div>
 
-					<div class="form-group d-flex justify-content-between align-items-center mb-3">
+					<div
+						class="form-group d-flex justify-content-between align-items-center mb-3">
 						<div class="form-check">
 							<input type="checkbox" class="form-check-input" id="rememberMe">
-							<label class="form-check-label text-muted small" for="rememberMe">Remember me</label>
+							<label class="form-check-label text-muted small" for="rememberMe"
+								th:text="#{login.remember}">Remember me</label>
 						</div>
-						<a href="#" class="forgot-link small text-decoration-none">Forgot Password?</a>
+						<a href="#" class="forgot-link small text-decoration-none"
+							th:text="#{login.forgot}">Forgot Password?</a>
 					</div>
 
-					<button type="submit" class="btn btn-prime w-100 rounded-2 shadow-sm py-2 mb-3">
-						<i class="fas fa-sign-in-alt me-2"></i> Sign In
+					<button type="submit"
+						class="btn btn-prime w-100 rounded-2 shadow-sm py-2 mb-3">
+						<i class="fas fa-sign-in-alt me-2"></i> <span
+							th:text="#{login.submit}">Sign In</span>
 					</button>
 				</form>
 			</div>
@@ -312,6 +413,6 @@
 		</div>
 	</div>
 
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script th:src="@{/plugins/bootstrap/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>

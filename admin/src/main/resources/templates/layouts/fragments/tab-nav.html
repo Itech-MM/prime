@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <li th:fragment="tab-item(tabId, label, icon, visible, active)"
+        th:if="${visible}" class="nav-item" role="presentation">
+        <a class="nav-link d-flex align-items-center gap-2"
+           th:classappend="${active} ? 'active'"
+           th:id="${tabId + '-tab'}"
+           data-bs-toggle="tab"
+           th:attr="href=${'#' + tabId}, data-tab-id=${tabId}"
+           role="tab">
+            <i th:if="${icon}" th:class="${icon}"></i>
+            <span th:text="${label}"></span>
+            <span class="badge bg-light text-dark border tab-count d-none" th:id="${tabId + '-count'}">0</span>
+        </a>
+    </li>
+</body>
+</html>

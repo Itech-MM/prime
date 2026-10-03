@@ -44,7 +44,7 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/user-setup}" th:object="${userDTO}" method="post" id="userForm">
+                        <form th:action="@{/users/setup}" th:object="${userDTO}" method="post" id="userForm" class="needs-validation">
                             <input type="hidden" th:field="*{id}">
                             
                             <!-- Name Field -->

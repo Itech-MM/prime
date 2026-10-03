@@ -11,7 +11,7 @@
 	<artifactId>commons</artifactId>
 	<packaging>jar</packaging>
 	<name>commons</name>
-	<description>Flexitech Ecommerce</description>
+	<description>Flexitech PRIME</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>

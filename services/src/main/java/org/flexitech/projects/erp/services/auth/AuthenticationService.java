@@ -70,6 +70,9 @@ public class AuthenticationService implements UserDetailsService {
                     if (Boolean.TRUE.equals(access.getCanDelete())) {
                         authorities.add(new SimpleGrantedAuthority(MenuPermission.DELETE.getAuthority() + "_"  + menuCode));
                     }
+                    if (Boolean.TRUE.equals(access.getCanApprove())) {
+                        authorities.add(new SimpleGrantedAuthority(MenuPermission.APPROVE.getAuthority() + "_" + menuCode));
+                    }
                 }
             }
         }

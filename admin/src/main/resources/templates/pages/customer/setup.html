@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base-layout}">
+<head>
+    <title th:text="${customerDTO.id != null} ? 'Update Customer' : 'Customer Setup'">Customer Setup</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="page-header">
+            <h1 class="h3 mb-0 text-gray-800" th:text="${customerDTO.id != null} ? 'Update Customer' : 'Customer Setup'">Customer Setup</h1>
+            <p class="text-muted mb-0" th:text="${customerDTO.id != null} ? 'Update existing customer information' : 'Create new customer'">Create new customer</p>
+        </div>
+
+        <div th:if="${param.error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${param.error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${errorMsg != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${errorMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${param.success != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${param.success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <ul class="nav nav-tabs mb-4" id="customerTabs" role="tablist" th:if="${customerDTO.id != null and @menuSecurity.checkMenuEdit('CUSTOMER_LIST')}">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details-pane" type="button" role="tab">
+                    <i class="fas fa-user me-1"></i> Details
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products-pane" type="button" role="tab">
+                    <i class="fas fa-box me-1"></i> Purchased Products
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="customerTabsContent">
+            <div class="tab-pane fade show active" id="details-pane" role="tabpanel">
+                <div class="row justify-content-start">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-address-book me-2 text-primary"></i>
+                                    <span th:text="${customerDTO.id != null} ? 'Update Customer' : 'Create New Customer'">Create New Customer</span>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form th:action="@{/customers/setup}" th:object="${customerDTO}" method="post" id="customerForm" class="needs-validation">
+                                    <input type="hidden" th:field="*{id}">
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="name" class="form-label fw-bold small text-dark">
+                                                Name <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" th:field="*{name}" class="form-control" id="name" placeholder="Enter customer name" required>
+                                            <div class="form-text text-danger small" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="code" class="form-label fw-bold small text-dark">
+                                                Code <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" th:field="*{code}" class="form-control" id="code" placeholder="Enter customer code" required>
+                                            <div class="form-text text-danger small" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="contactEmail" class="form-label fw-bold small text-dark">
+                                                Contact Email
+                                            </label>
+                                            <input type="email" th:field="*{contactEmail}" class="form-control" id="contactEmail" placeholder="Enter contact email">
+                                            <div class="form-text text-danger small" th:if="${#fields.hasErrors('contactEmail')}" th:errors="*{contactEmail}"></div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="status" class="form-label fw-bold small text-dark">
+                                                Status <span class="text-danger">*</span>
+                                            </label>
+                                            <select th:field="*{status}" class="form-select" id="status" required>
+                                                <option value="">Select Status</option>
+                                                <option th:each="status : ${statusList}"
+                                                        th:value="${status.code}"
+                                                        th:text="${status.desc}"
+                                                        th:selected="${status.code == customerDTO.status}">
+                                                </option>
+                                            </select>
+                                            <div class="form-text text-danger small" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mt-4">
+                                        <div class="col-12">
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <a th:href="@{/customers}" class="btn btn-outline-secondary">
+                                                    <i class="fas fa-arrow-left me-1"></i> Back to List
+                                                </a>
+                                                <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                                                    <i class="fas fa-redo me-1"></i> Clear
+                                                </button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save me-1"></i>
+                                                    <span th:text="${customerDTO.id != null} ? 'Update Customer' : 'Create Customer'">Create Customer</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="products-pane" role="tabpanel" th:if="${customerDTO.id != null and @menuSecurity.checkMenuEdit('CUSTOMER_LIST')}">
+                <div th:replace="~{pages/customer/customer-product-tab :: purchaseForm(customerId=${customerDTO.id})}"></div>
+                <div th:replace="~{pages/customer/customer-product-tab :: searchResults(customerId=${customerDTO.id})}"></div>
+            </div>
+        </div>
+    </div>
+
+    <div layout:fragment="modals">
+        <div class="modal fade" id="fingerprintModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-fingerprint me-2"></i>Update Fingerprint &amp; Reissue Token</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="fpLicenseId">
+                        <label for="fpValue" class="form-label fw-bold small text-dark">Fingerprint</label>
+                        <input type="text" class="form-control" id="fpValue" placeholder="Leave blank for unbound (ANY)">
+                        <p class="text-muted small mt-2">This will generate a new token file bound to this fingerprint. The customer must download and re-activate it on their installation.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="confirmReissueBtn" class="btn btn-primary">
+                            <i class="fas fa-sync me-1"></i> Update &amp; Reissue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div layout:fragment="scripts">
+        <script>
+            $(document).ready(function() {
+                $('#customerForm').on('submit', function(e) {
+                    let isValid = true;
+                    const requiredFields = ['#name', '#code', '#status'];
+
+                    requiredFields.forEach(field => {
+                        const element = $(field);
+                        if (!element.val().trim()) {
+                            element.addClass('is-invalid');
+                            isValid = false;
+                        } else {
+                            element.removeClass('is-invalid');
+                        }
+                    });
+
+                    if (!isValid) {
+                        e.preventDefault();
+                        showToast('Please fill all required fields', 'error');
+                    }
+                });
+
+                $('input, select').on('input change', function() {
+                    const val = $(this).val();
+                    if (val && val.toString().trim()) {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+
+                const customerId = $('#cpCustomerId').val();
+                let cpSelect2Initialized = false;
+
+                if (customerId) {
+                    $('#products-tab').on('shown.bs.tab', function() {
+                        if (!cpSelect2Initialized) {
+                            $('#cpProductId').select2({
+                                width: '100%',
+                                placeholder: 'Search for a product to purchase',
+                                ajax: {
+                                    url: CONTEXT_PATH + 'customer-products/available-select2',
+                                    dataType: 'json',
+                                    delay: 250,
+                                    data: function(params) {
+                                        return {
+                                            customerId: customerId,
+                                            q: params.term,
+                                            page: params.page || 0
+                                        };
+                                    },
+                                    processResults: function(data) {
+                                        return data;
+                                    },
+                                    cache: true
+                                },
+                                minimumInputLength: 0
+                            });
+
+                            $('#cpPlanId').select2({
+                                width: '100%',
+                                placeholder: 'Select a product first',
+                                ajax: {
+                                    url: CONTEXT_PATH + 'customer-products/plans-select2',
+                                    dataType: 'json',
+                                    delay: 250,
+                                    data: function(params) {
+                                        return {
+                                            productId: $('#cpProductId').val(),
+                                            q: params.term,
+                                            page: params.page || 0
+                                        };
+                                    },
+                                    processResults: function(data) {
+                                        return data;
+                                    },
+                                    cache: true
+                                },
+                                minimumInputLength: 0
+                            });
+
+                            $('#cpProductId').on('change', function() {
+                                const hasProduct = !!$(this).val();
+                                $('#cpPlanId').val(null).trigger('change');
+                                $('#cpPlanId').prop('disabled', !hasProduct);
+                            });
+
+                            cpSelect2Initialized = true;
+                        }
+                        loadPurchasedProducts(customerId);
+                    });
+
+                    $('#purchaseBtn').on('click', function() {
+                        const productId = $('#cpProductId').val();
+                        const planId = $('#cpPlanId').val();
+
+                        if (!productId) {
+                            showToast('Please select a product', 'error');
+                            return;
+                        }
+                        if (!planId) {
+                            showToast('Please select a plan', 'error');
+                            return;
+                        }
+
+                        $.ajax({
+                            url: CONTEXT_PATH + 'customer-products/purchase',
+                            type: 'POST',
+                            data: { customerId: customerId, productId: productId, planId: planId },
+                            success: function(response) {
+                                if (response.success) {
+                                    showToast(response.message, 'success');
+                                    $('#cpProductId').val(null).trigger('change');
+                                    $('#cpPlanId').val(null).trigger('change');
+                                    $('#cpPlanId').prop('disabled', true);
+                                    loadPurchasedProducts(customerId);
+                                } else {
+                                    showToast(response.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                showToast('Error purchasing product', 'error');
+                            }
+                        });
+                    });
+
+                    $(document).on('click', '.fingerprint-btn', function() {
+                        $('#fpLicenseId').val($(this).data('licenseid'));
+                        $('#fpValue').val($(this).data('fingerprint') || '');
+                        $('#fingerprintModal').modal('show');
+                    });
+
+                    $('#confirmReissueBtn').on('click', function() {
+                        const licenseId = $('#fpLicenseId').val();
+                        const fingerprint = $('#fpValue').val();
+
+                        $.ajax({
+                            url: CONTEXT_PATH + 'customer-products/reissue-token',
+                            type: 'POST',
+                            data: { licenseId: licenseId, fingerprint: fingerprint },
+                            success: function(response) {
+                                $('#fingerprintModal').modal('hide');
+                                if (response.success) {
+                                    showToast(response.message, 'success');
+                                    loadPurchasedProducts(customerId);
+                                } else {
+                                    showToast(response.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                $('#fingerprintModal').modal('hide');
+                                showToast('Error reissuing token', 'error');
+                            }
+                        });
+                    });
+                }
+            });
+
+            function loadPurchasedProducts(customerId) {
+                $('#cpLoadingSpinner').removeClass('d-none');
+                $('#cpTableContainer').addClass('d-none');
+
+                $.ajax({
+                    url: CONTEXT_PATH + 'customer-products/by-customer',
+                    type: 'GET',
+                    data: { customerId: customerId },
+                    success: function(items) {
+                        const tbody = $('#customerProductsTableBody');
+                        tbody.empty();
+
+                        if (items && items.length > 0) {
+                            items.forEach(function(item) {
+                                const lic = item.license;
+                                const statusBadge = lic ?
+                                    `<span class="badge bg-info">${lic.statusDesc || '-'}</span>` :
+                                    '<span class="text-muted">-</span>';
+
+                                const fingerprintDisplay = lic && lic.fingerprint ? lic.fingerprint : 'ANY';
+
+                                let actions = '<span class="text-muted">-</span>';
+                                if (lic) {
+                                    actions = `
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary fingerprint-btn"
+                                                    data-licenseid="${lic.id}"
+                                                    data-fingerprint="${lic.fingerprint || ''}">
+                                                <i class="fas fa-fingerprint"></i>
+                                            </button>
+                                            ${lic.tokenAvailable ? `<a class="btn btn-outline-success" href="${CONTEXT_PATH}licenses/${lic.id}/token/download"><i class="fas fa-download"></i></a>` : ''}
+                                        </div>
+                                    `;
+                                }
+
+                                const row = `
+                                    <tr>
+                                        <td>${item.productName || '-'}</td>
+                                        <td>${lic ? (lic.planName || '-') : '-'}</td>
+                                        <td>${lic ? (lic.code || '-') : '-'}</td>
+                                        <td>${fingerprintDisplay}</td>
+                                        <td>${lic ? (lic.expiresAt || '-') : '-'}</td>
+                                        <td>${statusBadge}</td>
+                                        <td>${actions}</td>
+                                    </tr>
+                                `;
+                                tbody.append(row);
+                            });
+                        } else {
+                            tbody.append(`
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fas fa-box fa-2x mb-2 d-block"></i>
+                                        No products purchased yet
+                                    </td>
+                                </tr>
+                            `);
+                        }
+
+                        $('#cpLoadingSpinner').addClass('d-none');
+                        $('#cpTableContainer').removeClass('d-none');
+                    },
+                    error: function() {
+                        showToast('Error loading purchased products', 'error');
+                        $('#cpLoadingSpinner').addClass('d-none');
+                        $('#cpTableContainer').removeClass('d-none');
+                    }
+                });
+            }
+
+            function clearForm() {
+                $('#customerForm')[0].reset();
+                $('input, select').removeClass('is-invalid');
+                showToast('Form cleared', 'info');
+            }
+        </script>
+    </div>
+</body>
+</html>

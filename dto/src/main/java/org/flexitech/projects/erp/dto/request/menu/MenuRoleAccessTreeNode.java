@@ -27,5 +27,7 @@ public class MenuRoleAccessTreeNode {
     private Boolean isDefault;
     private Integer permissionPriority;
     
+    private Boolean canApprove;
+    
     private List<MenuRoleAccessTreeNode> children = new ArrayList<>();
 }

@@ -40,6 +40,9 @@ public class MenuRoleAccess extends BasedEntity {
     @Column(name = "can_edit", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean canEdit = false;
     
+    @Column(name = "can_approve", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean canApprove = false;
+    
     @Column(name = "can_delete", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean canDelete = false;
     
@@ -67,10 +70,22 @@ public class MenuRoleAccess extends BasedEntity {
         this.canDelete = canDelete;
     }
     
+    public MenuRoleAccess(Role role, Menu menu, Boolean canView, Boolean canAccess, 
+                         Boolean canEdit, Boolean canApprove, Boolean canDelete) {
+        this.role = role;
+        this.menu = menu;
+        this.canView = canView;
+        this.canAccess = canAccess;
+        this.canEdit = canEdit;
+        this.canApprove = canApprove;
+        this.canDelete = canDelete;
+    }
+    
     public boolean hasAnyPermission() {
         return Boolean.TRUE.equals(canView) || 
                Boolean.TRUE.equals(canAccess) || 
                Boolean.TRUE.equals(canEdit) || 
+               Boolean.TRUE.equals(canApprove) || 
                Boolean.TRUE.equals(canDelete);
     }
     
@@ -78,6 +93,7 @@ public class MenuRoleAccess extends BasedEntity {
         return Boolean.TRUE.equals(canView) && 
                Boolean.TRUE.equals(canAccess) && 
                Boolean.TRUE.equals(canEdit) && 
+               Boolean.TRUE.equals(canApprove) && 
                Boolean.TRUE.equals(canDelete);
     }
     

@@ -3,50 +3,41 @@ package org.flexitech.projects.erp.commons;
 public class MenuCodeConstants {
 	public static final String MENU_DASHBOARD = "DASHBOARD"; // /
 
-	public static final String MENU_SHOP = "SHOP"; // #
-	public static final String MENU_SHOP_MANAGE = "SHOP_MANAGE"; // /shop
-	public static final String MENU_SHOP_ITEMS = "SHOP_ITEMS"; // /shop/items
-
-	public static final String MENU_ORDERS = "ORDERS"; // #
-	public static final String MENU_ORDERS_SEARCH = "ORDERS_SEARCH"; // /orders
-
-	public static final String MENU_PRODUCTS = "PRODUCTS"; // #
-	public static final String MENU_PRODUCT_SETUP = "PRODUCT_SETUP"; // /product
-	public static final String MENU_PRODUCT_SEARCH = "PRODUCT_SEARCH"; // /products
-	public static final String MENU_PRODUCT_ITEM_SEARCH = "PRODUCT_ITEM_SEARCH"; // /products/items
-	public static final String MENU_PRODUCT_ITEM_IMPORT = "PRODUCT_ITEM_IMPORT"; // /products/item-import
-
-	public static final String MENU_PROMOTIONS = "PROMOTIONS"; // #
-	public static final String MENU_PROMO_COUPONS = "PROMO_COUPONS"; // /coupons
-	public static final String MENU_PROMO_LIST = "PROMO_LIST"; // /promotions
-	public static final String MENU_PROMO_CREATE = "PROMO_CREATE"; // /promotion
-
-	public static final String MENU_CUSTOMER = "CUSTOMER"; // #
-	public static final String MENU_CUSTOMER_SEARCH = "CUSTOMER_SEARCH"; // /customers
-
 	public static final String MENU_USER_CONTROL = "USER_CONTROL"; // #
 	public static final String MENU_USER_LIST = "USER_LIST"; // /users
 	public static final String MENU_ROLE_LIST = "ROLE_LIST"; // /roles
 	public static final String MENU_USER_MANAGEMENT_MENU_ACCESS_MANAGE = "USER_MANAGEMENT_MENU_ACCESS_MANAGE"; // /menu-role-access
 
-	public static final String MENU_LOCATION = "LOCATION"; // #
-	public static final String MENU_LOCATION_STATE = "LOCATION_STATE"; // /states
-	public static final String MENU_LOCATION_CITY_GRP = "LOCATION_CITY_GRP"; // #
-	public static final String MENU_CITY_SETUP = "CITY_SETUP"; // /city
-	public static final String MENU_CITY_SEARCH = "CITY_SEARCH"; // /cities
-	public static final String MENU_LOCATION_ZONE_GRP = "LOCATION_ZONE_GRP"; // #
-	public static final String MENU_ZONE_SETUP = "ZONE_SETUP"; // /zone
-
-	public static final String MENU_MASTER_DATA = "MASTER_DATA"; // #
-	public static final String MENU_MASTER_CURRENCY = "MASTER_CURRENCY"; // /currency-setup
-	public static final String MENU_MASTER_BRANDS = "MASTER_BRANDS"; // /brands
-	public static final String MENU_MASTER_BANNERS = "MASTER_BANNERS"; // /banners
-	public static final String MENU_MASTER_PRODUCT_TYPES = "MASTER_PRODUCT_TYPES"; // /product-types
-	public static final String MENU_MASTER_PRODUCT_CAT = "MASTER_PRODUCT_CAT"; // /manage-product-category
-	public static final String MENU_MASTER_COLOR_TEMP = "MASTER_COLOR_TEMP"; // /color-templates
-	public static final String MENU_MASTER_SIZE_TEMP = "MASTER_SIZE_TEMP"; // /size-template
-	public static final String MENU_MASTER_DELIVERY = "MASTER_DELIVERY"; // /delivery-methods
-	public static final String MENU_MASTER_PAYMENT = "MASTER_PAYMENT"; // /payment-types
-
 	public static final String MENU_SETTINGS = "SETTINGS"; // /settings
+
+	public static final String MENU_CUSTOMER_MANAGEMENT = "CUSTOMER_MANAGEMENT"; // #
+	public static final String MENU_CUSTOMER_LIST = "CUSTOMER_LIST"; // /customers
+
+	public static final String MENU_LICENSE_MANAGEMENT = "LICENSE_MANAGEMENT"; // #
+	public static final String MENU_PRODUCT_LIST = "PRODUCT_LIST"; // /products
+	public static final String MENU_PRODUCT_FEATURE_LIST = "PRODUCT_FEATURE_LIST"; // /product-features
+	public static final String MENU_LICENSE_PLAN_LIST = "LICENSE_PLAN_LIST"; // /license-plans
+	public static final String MENU_LICENSE_LIST = "LICENSE_LIST"; // /licenses
+	
+	
+	public static final String MENU_CUSTOMER_PURCHASE_REPORT = "CUSTOMER_PURCHASE_REPORT"; // /reports/customer-purchases
+	
+	// Inventory
+	public static final String MENU_INV_ITEM_MANAGEMENT = "INV_ITEM_MANAGEMENT";
+	public static final String MENU_INV_ITEM = "INV_ITEM";
+	public static final String MENU_INV_CATEGORY = "INV_CATEGORY";
+	public static final String MENU_INV_BRAND = "INV_BRAND";
+	public static final String MENU_INV_UOM = "INV_UOM";
+	public static final String MENU_INV_SUPPLIER = "INV_SUPPLIER";
+	public static final String MENU_INV_WAREHOUSE = "INV_WAREHOUSE";
+	public static final String MENU_INV_GOODS_RECEIPT = "INV_GOODS_RECEIPT";
+	public static final String MENU_INV_GOODS_ISSUE = "INV_GOODS_ISSUE";
+	public static final String MENU_INV_STOCK_ADJUSTMENT = "INV_STOCK_ADJUSTMENT";
+	public static final String MENU_INV_STOCK_REPORT = "INV_STOCK_REPORT";
+	
+	public static final String MENU_INV_LOCATION = "INV_LOCATION";
+
+	public static final String MENU_INV_STOCK_ON_HAND = "INV_STOCK_ON_HAND";
+
+	public static final String MENU_INV_STOCK_CARD = "INV_STOCK_CARD";
 }

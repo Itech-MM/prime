@@ -18,6 +18,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MenuDTO extends CommonDTO{
 	private String name;
+	private String nameMm;
 	private String code;
 	private String description;
 	private String icon;
@@ -37,6 +38,7 @@ public class MenuDTO extends CommonDTO{
 	public MenuDTO(Menu m) {
 		super(m);
 		this.name = m.getName();
+		this.nameMm = m.getNameMm();
 		this.code = m.getCode();
 		this.description = m.getDescription();
 		this.url = m.getUrl();

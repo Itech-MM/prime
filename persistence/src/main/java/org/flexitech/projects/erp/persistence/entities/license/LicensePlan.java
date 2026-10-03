@@ -1,5 +1,6 @@
 package org.flexitech.projects.erp.persistence.entities.license;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.flexitech.projects.erp.commons.TableNames;
@@ -46,6 +47,9 @@ public class LicensePlan extends BasedEntity {
 
 	@Column(name = "max_gates")
 	private Integer maxGates;
+
+	@Column(name = "price")
+	private BigDecimal price;
 
 	private Integer status;
 

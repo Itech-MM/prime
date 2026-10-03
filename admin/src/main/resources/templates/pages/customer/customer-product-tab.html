@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="purchaseForm(customerId)">
+    <div class="card mb-4">
+        <div class="card-header bg-white py-3">
+            <h6 class="card-title mb-0">
+                <i class="fas fa-shopping-cart me-2 text-primary"></i>Purchase New Product
+            </h6>
+        </div>
+        <div class="card-body">
+            <input type="hidden" id="cpCustomerId" th:value="${customerId}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="cpProductId" class="form-label fw-bold small text-dark">Product</label>
+                    <select class="form-select" id="cpProductId" style="width: 100%;"></select>
+                </div>
+                <div class="col-md-5">
+                    <label for="cpPlanId" class="form-label fw-bold small text-dark">Plan</label>
+                    <select class="form-select" id="cpPlanId" style="width: 100%;" disabled></select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" id="purchaseBtn" class="btn btn-success w-100">
+                        <i class="fas fa-plus me-1"></i> Purchase
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="searchResults(customerId)">
+    <div class="card">
+        <div class="card-header bg-white py-3">
+            <h6 class="card-title mb-0">
+                <i class="fas fa-box me-2 text-primary"></i>Purchased Products &amp; Licenses
+            </h6>
+        </div>
+        <div class="card-body">
+            <div id="cpLoadingSpinner" class="text-center d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div class="table-responsive" id="cpTableContainer">
+                <table class="table table-hover table-striped" id="customerProductsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>Plan</th>
+                            <th>License Code</th>
+                            <th>Fingerprint</th>
+                            <th>Expires At</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerProductsTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 public enum MenuGroupCode {
-	CORE(1, "Core"), OPERATIONS(2, "Operations"), MANGEMENTS(3, "Managements"), REPORTS(4, "Reports");
+	CORE(1, "Core"), OPERATIONS(2, "Operations"), MANGEMENTS(3, "Managements"), INVENTORY(5, "Inventory"), REPORTS(4, "Reports");
 
 	private final Integer code;
 	private final String desc;

@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base-layout}">
+<head>
+<title th:text="#{dashboard.title}">Dashboard</title>
+
+<style>
+:root {
+	--c-indigo: #6366f1;
+	--c-violet: #8b5cf6;
+	--c-sky: #0ea5e9;
+	--c-teal: #14b8a6;
+	--c-emerald: #10b981;
+	--c-amber: #f59e0b;
+	--c-orange: #f97316;
+	--c-rose: #f43f5e;
+}
+
+body {
+	background-color: var(--light-bg);
+	color: var(--ink);
+}
+
+.is-loading .dash-content {
+	display: none !important;
+}
+
+#dashboard-root:not(.is-loading) .skeleton-container {
+	display: none;
+}
+
+.skeleton {
+	background: linear-gradient(90deg, #eef2f7 25%, #dbe3ee 50%, #eef2f7 75%);
+	background-size: 200% 100%;
+	animation: shimmer 1.5s infinite;
+	border-radius: 6px;
+	display: inline-block;
+}
+
+.skeleton-text {
+	height: 28px;
+	width: 100%;
+	margin-bottom: 0.25rem;
+}
+
+.skeleton-chart {
+	height: 260px;
+	width: 100%;
+	border-radius: 10px;
+}
+
+.skeleton-table-row {
+	height: 32px;
+	width: 100%;
+	margin-bottom: 0.4rem;
+	border-radius: 6px;
+}
+
+.stat-card .skeleton {
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0.25) 25%,
+		rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0.25) 75%);
+	background-size: 200% 100%;
+}
+
+@
+keyframes shimmer { 0% {
+	background-position: -200% 0;
+}
+
+100
+%
+{
+background-position
+:
+200%
+0;
+}
+}
+.no-data-placeholder {
+	display: none;
+	text-align: center;
+	color: var(--secondary-text-color);
+	padding: 3rem 1rem;
+}
+
+.no-data-placeholder.show {
+	display: block;
+}
+
+.no-data-placeholder i {
+	font-size: 1.75rem;
+	margin-bottom: 0.5rem;
+	opacity: 0.6;
+}
+
+.text-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 100%;
+}
+
+.dash-hero {
+	background: radial-gradient(circle at 12% 120%, rgba(45, 212, 191, 0.55),
+		transparent 45%),
+		radial-gradient(circle at 92% -20%, rgba(167, 139, 250, 0.6),
+		transparent 45%),
+		linear-gradient(120deg, #1e3a5f 0%, #312e81 55%, #0f766e 100%);
+	border-radius: 16px;
+	padding: 1.35rem 1.6rem;
+	color: #fff;
+	box-shadow: 0 14px 30px -12px rgba(49, 46, 129, 0.55);
+}
+
+.dash-hero h1 {
+	font-weight: 800;
+	letter-spacing: -0.025em;
+	font-size: 1.6rem;
+	color: #fff;
+	margin: 0;
+}
+
+.dash-hero p {
+	color: rgba(255, 255, 255, 0.78);
+	margin: 0;
+}
+
+.dash-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	flex-wrap: wrap;
+}
+
+.active-range-label {
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: rgba(255, 255, 255, 0.85);
+	background: rgba(255, 255, 255, 0.14);
+	padding: 0.35rem 0.75rem;
+	border-radius: 999px;
+}
+
+.hero-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	background: rgba(255, 255, 255, 0.16);
+	border: 1px solid rgba(255, 255, 255, 0.35);
+	border-radius: 10px;
+	padding: 0.45rem 0.9rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: #fff;
+	cursor: pointer;
+	backdrop-filter: blur(6px);
+	transition: all 0.2s ease;
+}
+
+.hero-btn:hover {
+	background: rgba(255, 255, 255, 0.28);
+	color: #fff;
+}
+
+.date-filter {
+	position: relative;
+}
+
+.date-filter-toggle i.fa-chevron-down {
+	font-size: 0.68rem;
+	transition: transform 0.2s ease;
+}
+
+.date-filter.open .date-filter-toggle i.fa-chevron-down {
+	transform: rotate(180deg);
+}
+
+.date-filter-menu {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 1050;
+	background: var(--card-bg);
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	box-shadow: 0 16px 32px -8px rgba(15, 31, 51, 0.25);
+	min-width: 220px;
+	padding: 0.4rem;
+	display: none;
+}
+
+.date-filter.open .date-filter-menu {
+	display: block;
+}
+
+.date-filter-option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.5rem 0.7rem;
+	border-radius: 8px;
+	font-size: 0.85rem;
+	color: var(--ink);
+	cursor: pointer;
+	transition: background 0.15s ease;
+}
+
+.date-filter-option:hover {
+	background-color: var(--light-bg);
+}
+
+.date-filter-option.active {
+	background: linear-gradient(90deg, rgba(99, 102, 241, 0.14),
+		rgba(20, 184, 166, 0.14));
+	color: var(--c-indigo);
+	font-weight: 600;
+}
+
+.date-filter-option.active i.fa-check {
+	display: inline-block;
+}
+
+.date-filter-option i.fa-check {
+	display: none;
+	font-size: 0.72rem;
+}
+
+.date-filter-divider {
+	height: 1px;
+	background-color: var(--border-color);
+	margin: 0.3rem 0.2rem;
+}
+
+.custom-range-panel {
+	padding: 0.6rem 0.7rem 0.2rem;
+	display: none;
+}
+
+.custom-range-panel.show {
+	display: block;
+}
+
+.custom-range-panel label {
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--secondary-text-color);
+	margin-bottom: 0.2rem;
+}
+
+.custom-range-panel .form-control {
+	font-size: 0.82rem;
+	padding: 0.35rem 0.6rem;
+	border-radius: 6px;
+}
+
+.custom-range-panel .btn-apply-range {
+	width: 100%;
+	margin-top: 0.5rem;
+	background: linear-gradient(90deg, var(--c-indigo), var(--c-teal));
+	color: #fff;
+	border: none;
+}
+
+.section-title {
+	display: flex;
+	align-items: center;
+	gap: 0.7rem;
+	margin: 1.6rem 0 0.9rem;
+}
+
+.section-title h5 {
+	margin: 0;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	color: var(--ink);
+}
+
+.section-title small {
+	color: var(--secondary-text-color);
+	margin-left: auto;
+	font-size: 0.75rem;
+}
+
+.section-pill {
+	width: 34px;
+	height: 34px;
+	border-radius: 10px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: #fff;
+	font-size: 0.9rem;
+}
+
+.pill-indigo {
+	background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.pill-teal {
+	background: linear-gradient(135deg, #0d9488, #34d399);
+}
+
+.card {
+	background-color: var(--card-bg);
+	border: 1px solid var(--border-color) !important;
+	border-radius: 14px !important;
+	box-shadow: 0 2px 6px -1px rgba(15, 31, 51, 0.06) !important;
+	transition: all 0.2s ease;
+}
+
+.card:hover {
+	box-shadow: 0 10px 22px -8px rgba(15, 31, 51, 0.16) !important;
+}
+
+.card-header {
+	background-color: transparent !important;
+	border-bottom: 1px solid var(--border-color) !important;
+	padding: 0.85rem 1.2rem !important;
+}
+
+.card-body {
+	padding: 1rem 1.2rem !important;
+}
+
+.card-title-modern {
+	margin: 0;
+	font-weight: 700;
+	font-size: 0.85rem;
+	color: var(--ink);
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+}
+
+.dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.dot-indigo {
+	background: var(--c-indigo);
+	box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
+}
+
+.dot-pink {
+	background: #ec4899;
+	box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.18);
+}
+
+.dot-amber {
+	background: var(--c-amber);
+	box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+}
+
+.dot-sky {
+	background: var(--c-sky);
+	box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.18);
+}
+
+.dot-emerald {
+	background: var(--c-emerald);
+	box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18);
+}
+
+.dot-rose {
+	background: var(--c-rose);
+	box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.18);
+}
+
+.dot-violet {
+	background: var(--c-violet);
+	box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.18);
+}
+
+.stat-card {
+	position: relative;
+	overflow: hidden;
+	border: none !important;
+	color: #fff;
+	box-shadow: 0 12px 24px -12px rgba(15, 31, 51, 0.45) !important;
+}
+
+.stat-card:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 18px 30px -12px rgba(15, 31, 51, 0.5) !important;
+}
+
+.stat-card::before {
+	content: '';
+	position: absolute;
+	right: -26px;
+	top: -26px;
+	width: 120px;
+	height: 120px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.14);
+}
+
+.stat-card::after {
+	content: '';
+	position: absolute;
+	right: 38px;
+	bottom: -48px;
+	width: 96px;
+	height: 96px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.09);
+}
+
+.stat-card .card-body {
+	position: relative;
+	z-index: 1;
+}
+
+.grad-indigo {
+	background: linear-gradient(135deg, #4f46e5, #818cf8);
+}
+
+.grad-emerald {
+	background: linear-gradient(135deg, #059669, #34d399);
+}
+
+.grad-sky {
+	background: linear-gradient(135deg, #0284c7, #38bdf8);
+}
+
+.grad-amber {
+	background: linear-gradient(135deg, #d97706, #fbbf24);
+}
+
+.grad-violet {
+	background: linear-gradient(135deg, #7c3aed, #c084fc);
+}
+
+.grad-teal {
+	background: linear-gradient(135deg, #0f766e, #2dd4bf);
+}
+
+.grad-orange {
+	background: linear-gradient(135deg, #ea580c, #fb923c);
+}
+
+.grad-rose {
+	background: linear-gradient(135deg, #e11d48, #fb7185);
+}
+
+.stat-label {
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.85);
+	margin-bottom: 0.3rem;
+}
+
+.stat-value {
+	font-size: 1.75rem;
+	font-weight: 800;
+	line-height: 1.15;
+	letter-spacing: -0.02em;
+	color: #fff;
+}
+
+.stat-sub {
+	font-size: 0.72rem;
+	color: rgba(255, 255, 255, 0.8);
+	margin-top: 0.2rem;
+}
+
+.stat-icon {
+	width: 48px;
+	height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 14px;
+	font-size: 1.15rem;
+	background: rgba(255, 255, 255, 0.22);
+	color: #fff;
+	backdrop-filter: blur(4px);
+}
+
+.stat-trend {
+	font-size: 0.7rem;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 0.35rem;
+	padding: 2px 9px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.22);
+	color: #fff;
+}
+
+.stat-trend:empty {
+	display: none !important;
+}
+
+.stat-trend.down {
+	background: rgba(15, 23, 42, 0.28);
+}
+
+.mini-stat {
+	border-radius: 12px;
+	padding: 0.6rem 0.8rem;
+	display: flex;
+	flex-direction: column;
+}
+
+.mini-stat span {
+	font-size: 0.68rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.mini-stat strong {
+	font-size: 1.05rem;
+	font-weight: 800;
+}
+
+.mini-green {
+	background: rgba(16, 185, 129, 0.12);
+	color: #047857;
+}
+
+.mini-rose {
+	background: rgba(244, 63, 94, 0.12);
+	color: #be123c;
+}
+
+.mini-indigo {
+	background: rgba(99, 102, 241, 0.12);
+	color: #4338ca;
+}
+
+.mini-amber {
+	background: rgba(245, 158, 11, 0.14);
+	color: #b45309;
+}
+
+.table {
+	margin-bottom: 0;
+}
+
+.table th {
+	font-weight: 700;
+	font-size: 0.68rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--secondary-text-color);
+	background-color: #f8fafc !important;
+	border-bottom: 1px solid var(--border-color);
+	padding: 0.65rem 1rem;
+}
+
+.table td {
+	padding: 0.65rem 1rem;
+	color: var(--ink);
+	border-bottom: 1px solid var(--border-color);
+	vertical-align: middle;
+	font-size: 0.85rem;
+}
+
+.table-hover tbody tr:hover {
+	background-color: rgba(99, 102, 241, 0.05);
+}
+
+.list-group-item {
+	border-color: var(--border-color) !important;
+	padding: 0.65rem 1rem;
+	background-color: transparent;
+	font-size: 0.85rem;
+}
+
+.stock-progress {
+	height: 6px;
+	border-radius: 999px;
+	background: #eef2f7;
+	overflow: hidden;
+	min-width: 90px;
+}
+
+.stock-progress>div {
+	height: 100%;
+	border-radius: 999px;
+}
+
+.avatar-dot {
+	width: 34px;
+	height: 34px;
+	border-radius: 10px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.8rem;
+	flex-shrink: 0;
+}
+
+.avatar-in {
+	background: rgba(16, 185, 129, 0.14);
+	color: #047857;
+}
+
+.avatar-out {
+	background: rgba(244, 63, 94, 0.14);
+	color: #be123c;
+}
+
+.expiring-item .days-badge {
+	font-size: 0.72rem;
+	font-weight: 700;
+}
+
+@media ( max-width : 768px) {
+	.date-filter-menu {
+		right: auto;
+		left: 0;
+	}
+	.dash-hero {
+		padding: 1.1rem;
+	}
+}
+</style>
+</head>
+<body>
+	<div layout:fragment="content">
+		<div id="dashboard-root" class="is-loading">
+			<div
+				class="dash-hero mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+				<div>
+					<h1 th:text="#{dashboard.title}">Dashboard</h1>
+					<p class="small" th:text="#{dashboard.subtitle}">PRIME
+						management control panel</p>
+				</div>
+
+				<div class="dash-toolbar">
+					<span class="active-range-label d-none d-md-inline"
+						id="active-range-label"></span>
+
+					<div class="date-filter" id="date-filter">
+						<button type="button" class="hero-btn date-filter-toggle"
+							id="date-filter-toggle">
+							<i class="far fa-calendar-alt"></i> <span
+								id="date-filter-current" th:text="#{common.thisMonth}">This
+								Month</span> <i class="fas fa-chevron-down"></i>
+						</button>
+
+						<div class="date-filter-menu" id="date-filter-menu">
+							<div class="date-filter-option" data-preset="today">
+								<span th:text="#{common.today}">Today</span><i
+									class="fas fa-check"></i>
+							</div>
+							<div class="date-filter-option" data-preset="week">
+								<span th:text="#{common.thisWeek}">This Week</span><i
+									class="fas fa-check"></i>
+							</div>
+							<div class="date-filter-option active" data-preset="month">
+								<span th:text="#{common.thisMonth}">This Month</span><i
+									class="fas fa-check"></i>
+							</div>
+							<div class="date-filter-option" data-preset="year">
+								<span th:text="#{common.thisYear}">This Year</span><i
+									class="fas fa-check"></i>
+							</div>
+							<div class="date-filter-option" data-preset="last12months">
+								<span th:text="#{common.last12Months}">Last 12 Months</span><i
+									class="fas fa-check"></i>
+							</div>
+
+							<div class="date-filter-divider"></div>
+
+							<div class="date-filter-option" data-preset="custom">
+								<span th:text="#{common.customRange}">Custom Range</span><i
+									class="fas fa-check"></i>
+							</div>
+
+							<div class="custom-range-panel" id="custom-range-panel">
+								<label th:text="#{common.startDate}">Start Date</label> <input
+									type="date" class="form-control mb-2" id="custom-start-date">
+								<label th:text="#{common.endDate}">End Date</label> <input
+									type="date" class="form-control" id="custom-end-date">
+								<button type="button" class="btn btn-sm btn-apply-range"
+									id="apply-custom-range" th:text="#{common.apply}">Apply</button>
+							</div>
+						</div>
+					</div>
+
+					<button id="refresh-btn" class="hero-btn">
+						<i class="fas fa-sync-alt"></i> <span class="d-none d-sm-inline"
+							th:text="#{common.refresh}">Refresh</span>
+					</button>
+				</div>
+			</div>
+
+			<div class="section-title">
+				<span class="section-pill pill-indigo"><i class="fas fa-key"></i></span>
+				<h5 th:text="#{dashboard.section.licensing}">Licensing</h5>
+			</div>
+
+			<div class="row mb-3 g-3">
+				<div class="col-xl-3 col-md-6">
+					<div class="card stat-card grad-indigo h-100" id="issued-card">
+						<div
+							class="card-body d-flex align-items-center justify-content-between">
+							<div>
+								<div class="stat-label" th:text="#{dashboard.licensesIssued}">Licenses
+									Issued</div>
+								<div class="skeleton-container">
+									<div class="skeleton skeleton-text" style="width: 80px;"></div>
+								</div>
+								<div class="stat-value dash-content">0</div>
+								<div class="stat-trend dash-content"></div>
+							</div>
+							<div class="stat-icon">
+								<i class="fas fa-certificate"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-xl-3 col-md-6">
+					<div class="card stat-card grad-emerald h-100" id="active-card">
+						<div
+							class="card-body d-flex align-items-center justify-content-between">
+							<div>
+								<div class="stat-label" th:text="#{dashboard.activeLicenses}">Active
+									Licenses</div>
+								<div class="skeleton-container">
+									<div class="skeleton skeleton-text" style="width: 80px;"></div>
+								</div>
+								<div class="stat-value dash-content">0</div>
+								<div class="stat-trend dash-content"></div>
+							</div>
+							<div class="stat-icon">
+								<i class="fas fa-check-circle"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-xl-3 col-md-6">
+					<div class="card stat-card grad-sky h-100" id="products-card">
+						<div
+							class="card-body d-flex align-items-center justify-content-between">
+							<div>
+								<div class="stat-label" th:text="#{dashboard.totalProducts}">Total
+									Products</div>
+								<div class="skeleton-container">
+									<div class="skeleton skeleton-text" style="width: 60px;"></div>
+								</div>
+								<div class="stat-value dash-content">0</div>
+								<div class="stat-sub" th:text="#{dashboard.totalProducts.sub}">In
+									catalog</div>
+							</div>
+							<div class="stat-icon">
+								<i class="fas fa-box"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-xl-3 col-md-6">
+					<div class="card stat-card grad-amber h-100" id="expiring-card">
+						<div
+							class="card-body d-flex align-items-center justify-content-between">
+							<div>
+								<div class="stat-label" th:text="#{dashboard.expiringSoon30}">Expiring
+									Soon (30d)</div>
+								<div class="skeleton-container">
+									<div class="skeleton skeleton-text" style="width: 60px;"></div>
+								</div>
+								<div class="stat-value dash-content">0</div>
+								<div class="stat-sub" th:text="#{dashboard.expiringSoon.sub}">Active
+									licenses</div>
+							</div>
+							<div class="stat-icon">
+								<i class="fas fa-hourglass-half"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row mb-3 g-3">
+				<div class="col-xl-7 col-lg-7">
+					<div class="card h-100">
+						<div class="card-header">
+							<h6 class="card-title-modern">
+								<span class="dot dot-indigo"></span><span
+									th:text="#{dashboard.chart.issuedOverTime}">Licenses
+									Issued Over Time</span>
+							</h6>
+						</div>
+						<div class="card-body">
+							<div class="skeleton-container">
+								<div class="skeleton skeleton-chart"></div>
+							</div>
+							<div class="dash-content"
+								style="position: relative; height: 260px; width: 100%">
+								<canvas id="issuedLineChart"></canvas>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-xl-5 col-lg-5">
+					<div class="card h-100">
+						<div class="card-header">
+							<h6 class="card-title-modern">
+								<span class="dot dot-pink"></span><span
+									th:text="#{dashboard.chart.revenueByProduct}">Revenue by
+									Product</span>
+							</h6>
+						</div>
+						<div class="card-body">
+							<div class="skeleton-container">
+								<div class="skeleton skeleton-chart"></div>
+							</div>
+							<div class="dash-content">
+								<div id="revenue-chart-wrapper"
+									style="position: relative; height: 260px; width: 100%">
+									<canvas id="revenueDonutChart"></canvas>
+								</div>
+								<div class="no-data-placeholder" id="revenue-no-data"
+									style="height: 260px;">
+									<i class="fas fa-chart-pie d-block"></i>
+									<div th:text="#{dashboard.revenue.empty}">No revenue data
+										yet</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row g-3">
+				<div class="col-xl-7 col-lg-7">
+					<div class="card h-100">
+						<div class="card-header">
+							<h6 class="card-title-modern">
+								<span class="dot dot-sky"></span><span
+									th:text="#{dashboard.recentLicenses}">Recently Issued
+									Licenses</span>
+							</h6>
+						</div>
+						<div class="card-body p-0">
+							<div class="skeleton-container p-3">
+								<div class="skeleton skeleton-table-row"></div>
+								<div class="skeleton skeleton-table-row"></div>
+								<div class="skeleton skeleton-table-row"></div>
+							</div>
+							<div class="table-responsive dash-content">
+								<table class="table table-hover align-middle mb-0">
+									<thead>
+										<tr>
+											<th th:text="#{common.code}">Code</th>
+											<th th:text="#{common.customer}">Customer</th>
+											<th th:text="#{common.product}">Product</th>
+											<th th:text="#{dashboard.col.issuedAt}">Issued At</th>
+											<th th:text="#{common.status}">Status</th>
+										</tr>
+									</thead>
+									<tbody id="recent-licenses-table"></tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-xl-5 col-lg-5">
+					<div class="card h-100">
+						<div class="card-header">
+							<h6 class="card-title-modern">
+								<span class="dot dot-amber"></span><span
+									th:text="#{dashboard.expiringSoon}">Expiring Soon</span>
+							</h6>
+						</div>
+						<div class="card-body p-0">
+							<div class="skeleton-container p-3">
+								<div class="skeleton skeleton-table-row"></div>
+								<div class="skeleton skeleton-table-row"></div>
+							</div>
+							<ul class="list-group list-group-flush dash-content"
+								id="expiring-list"></ul>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="section-title">
+				<span class="section-pill pill-teal"><i
+					class="fas fa-warehouse"></i></span>
+				<h5 th:text="#{dashboard.section.inventory}">Inventory</h5>
+				<small class="d-none d-md-inline"
+					th:text="#{dashboard.section.inventory.note}">Stock levels
+					are current. Movements follow the selected period.</small>
+			</div>
+
+			<div class="row mb-3 g-3">
+				<div class="col-xl-3 col-md-6">
+					<div class="card stat-card grad-violet h-100" id="items-card">
+						<div
+							class="card-body d-flex align-items-center justify-content-between">
+							<div>
+								<div class="stat-label" th:text="#{dashboard.inventoryItems}">Inventory
+									Items</div>
+								<div class="skeleton-container">
+									<div class="skeleton skeleton-text" style="width: 70px;"></div>
+								</div>
+								<div class="stat-value dash-content">0</div>
+								<div class="stat-sub" th:text="#{dashboard.inventoryItems.sub}">Active
+									SKUs</div>
+							</div>
+							<div class="stat-icon">
+								<i class="fas fa-boxes"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-xl-3 col-md-6">
+					<div class="card stat-card grad-teal h-100" id="stockvalue-card">
+						<div
+							class="card-body d-flex align-items-center justify-content-between">
+							<div>
+								<div class="stat-label" th:text="#{dashboard.stockValue}">Stock
+									Value</div>
+								<div class="skeleton-container">
+									<div class="skeleton skeleton-text" style="width: 110px;"></div>
+								</div>
+								<div class="stat-value dash-content">0</div>
+								<div class="stat-sub dash-content"></div>
+							</div>
+							<div class="stat-icon">
+								<i class="fas fa-coins"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-xl-3 col-md-6">
+					<div class="card stat-card grad-orange h-100" id="lowstock-card">
+						<div
+							class="card-body d-flex align-items-center justify-content-between">
+							<div>
+								<div class="stat-label" th:text="#{dashboard.lowStock}">Low
+									Stock</div>
+								<div class="skeleton-container">
+									<div class="skeleton skeleton-text" style="width: 60px;"></div>
+								</div>
+								<div class="stat-value dash-content">0</div>
+								<div class="stat-sub" th:text="#{dashboard.lowStock.sub}">At
+									or below reorder level</div>
+							</div>
+							<div class="stat-icon">
+								<i class="fas fa-exclamation-triangle"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-xl-3 col-md-6">
+					<div class="card stat-card grad-rose h-100" id="outofstock-card">
+						<div
+							class="card-body d-flex align-items-center justify-content-between">
+							<div>
+								<div class="stat-label" th:text="#{dashboard.outOfStock}">Out
+									of Stock</div>
+								<div class="skeleton-container">
+									<div class="skeleton skeleton-text" style="width: 60px;"></div>
+								</div>
+								<div class="stat-value dash-content">0</div>
+								<div class="stat-sub" th:text="#{dashboard.outOfStock.sub}">No
+									quantity on hand</div>
+							</div>
+							<div class="stat-icon">
+								<i class="fas fa-ban"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row mb-3 g-3">
+				<div class="col-xl-7 col-lg-7">
+					<div class="card h-100">
+						<div class="card-header">
+							<h6 class="card-title-modern">
+								<span class="dot dot-emerald"></span><span
+									th:text="#{dashboard.stockMovement}">Stock Movement</span>
+							</h6>
+						</div>
+						<div class="card-body">
+							<div class="skeleton-container">
+								<div class="skeleton skeleton-chart"></div>
+							</div>
+							<div class="dash-content">
+								<div class="row g-2 mb-3">
+									<div class="col-6 col-md-3">
+										<div class="mini-stat mini-green">
+											<span th:text="#{dashboard.mv.qtyIn}">Qty In</span><strong
+												id="mv-qty-in">0</strong>
+										</div>
+									</div>
+									<div class="col-6 col-md-3">
+										<div class="mini-stat mini-rose">
+											<span th:text="#{dashboard.mv.qtyOut}">Qty Out</span><strong
+												id="mv-qty-out">0</strong>
+										</div>
+									</div>
+									<div class="col-6 col-md-3">
+										<div class="mini-stat mini-indigo">
+											<span th:text="#{dashboard.mv.receivedValue}">Received
+												Value</span><strong id="mv-received">0</strong>
+										</div>
+									</div>
+									<div class="col-6 col-md-3">
+										<div class="mini-stat mini-amber">
+											<span th:text="#{dashboard.mv.issuedValue}">Issued
+												Value</span><strong id="mv-issued">0</strong>
+										</div>
+									</div>
+								</div>
+								<div style="position: relative; height: 230px; width: 100%">
+									<canvas id="movementChart"></canvas>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-xl-5 col-lg-5">
+					<div class="card h-100">
+						<div class="card-header">
+							<h6 class="card-title-modern">
+								<span class="dot dot-violet"></span><span
+									th:text="#{dashboard.stockValueByCategory}">Stock Value
+									by Category</span>
+							</h6>
+						</div>
+						<div class="card-body">
+							<div class="skeleton-container">
+								<div class="skeleton skeleton-chart"></div>
+							</div>
+							<div class="dash-content">
+								<div id="category-chart-wrapper"
+									style="position: relative; height: 330px; width: 100%">
+									<canvas id="categoryChart"></canvas>
+								</div>
+								<div class="no-data-placeholder" id="category-no-data"
+									style="height: 330px;">
+									<i class="fas fa-chart-pie d-block"></i>
+									<div th:text="#{dashboard.category.empty}">No stock on
+										hand yet</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row g-3 mb-4">
+				<div class="col-xl-5 col-lg-5">
+					<div class="card h-100">
+						<div class="card-header">
+							<h6 class="card-title-modern">
+								<span class="dot dot-rose"></span><span
+									th:text="#{dashboard.needsRestock}">Needs Restock</span>
+							</h6>
+						</div>
+						<div class="card-body p-0">
+							<div class="skeleton-container p-3">
+								<div class="skeleton skeleton-table-row"></div>
+								<div class="skeleton skeleton-table-row"></div>
+								<div class="skeleton skeleton-table-row"></div>
+							</div>
+							<div class="table-responsive dash-content">
+								<table class="table table-hover align-middle mb-0">
+									<thead>
+										<tr>
+											<th th:text="#{common.item}">Item</th>
+											<th class="text-end" th:text="#{dashboard.col.onHand}">On
+												Hand</th>
+											<th class="text-end" th:text="#{dashboard.col.reorder}">Reorder</th>
+											<th th:text="#{dashboard.col.level}">Level</th>
+										</tr>
+									</thead>
+									<tbody id="low-stock-table"></tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-xl-7 col-lg-7">
+					<div class="card h-100">
+						<div class="card-header">
+							<h6 class="card-title-modern">
+								<span class="dot dot-emerald"></span><span
+									th:text="#{dashboard.recentMovements}">Recent Stock
+									Movements</span>
+							</h6>
+						</div>
+						<div class="card-body p-0">
+							<div class="skeleton-container p-3">
+								<div class="skeleton skeleton-table-row"></div>
+								<div class="skeleton skeleton-table-row"></div>
+								<div class="skeleton skeleton-table-row"></div>
+							</div>
+							<div class="table-responsive dash-content">
+								<table class="table table-hover align-middle mb-0">
+									<thead>
+										<tr>
+											<th th:text="#{common.item}">Item</th>
+											<th th:text="#{common.type}">Type</th>
+											<th class="text-end" th:text="#{dashboard.col.qty}">Qty</th>
+											<th th:text="#{common.reference}">Reference</th>
+											<th th:text="#{dashboard.col.postedAt}">Posted At</th>
+										</tr>
+									</thead>
+									<tbody id="recent-movements-table"></tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div layout:fragment="scripts">
+		<script th:src="@{/plugins/chart/chart.js}"></script>
+		<script th:src="@{/js/common/I18nConfig.js}"></script>
+
+		<script th:src="@{/js/dashboard/dashboard.js}"></script>
+	</div>
+</body>
+</html>
+</html>

@@ -102,6 +102,25 @@ function showWarning(message) {
 	showToast(message, 'warning');
 }
 
+var ConfirmDelete = (function () {
+    var pendingCallback = null;
+
+    $(document).on('click', '#confirmDeleteBtn', function () {
+        if (pendingCallback) {
+            pendingCallback();
+        }
+        bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal')).hide();
+    });
+
+    function open(name, callback) {
+        pendingCallback = callback;
+        $('#confirmDeleteName').text(name);
+        new bootstrap.Modal(document.getElementById('confirmDeleteModal')).show();
+    }
+
+    return { open: open };
+})();
+
 // Initialize on document ready
 
 

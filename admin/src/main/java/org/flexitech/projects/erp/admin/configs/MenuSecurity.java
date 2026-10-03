@@ -27,6 +27,10 @@ public class MenuSecurity {
         return checkMenuPermission(menuCode, "DELETE", true);
     }
     
+    public boolean hasMenuApprove(String menuCode) throws MenuAccessDeniedException {
+        return checkMenuPermission(menuCode, "APPROVE", true);
+    }
+    
     public boolean checkMenuAccess(String menuCode){
         try {
 			return checkMenuPermission(menuCode, "ACCESS", false);
@@ -49,6 +53,14 @@ public class MenuSecurity {
 		} catch (MenuAccessDeniedException e) {
 			return false;
 		}
+    }
+    
+    public boolean checkMenuApprove(String menuCode) {
+        try {
+            return checkMenuPermission(menuCode, "APPROVE", false);
+        } catch (MenuAccessDeniedException e) {
+            return false;
+        }
     }
 
     public boolean checkMenuDelete(String menuCode){
